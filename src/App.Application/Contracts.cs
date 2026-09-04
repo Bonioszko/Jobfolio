@@ -3,7 +3,7 @@ using App.Domain;
 namespace App.Application;
 
 public sealed record EmailMessage(string ExternalId, string Sender, string Subject, string HtmlBody, DateTimeOffset ReceivedAt);
-public sealed record ParseResult(string SourceKey, string DisplayTitle, Dictionary<string, object?> ParsedData, Dictionary<string, object?> SearchData);
+public sealed record ParseResult(string SourceKey, string SourceExternalId, string DisplayTitle, Dictionary<string, object?> ParsedData, Dictionary<string, object?> SearchData);
 public enum ParserMatch { Matched, Unsupported, Ambiguous }
 public sealed record ParserSelection(ParserMatch Match, ISourceParser? Parser);
 

@@ -1,19 +1,21 @@
 using App.Application;
 using App.Parsers;
+using App.Parsers.Sources;
 
 namespace App.Tests;
 
 public sealed class ParserTests
 {
     [Fact]
-    public async Task SourceA_parses_and_normalizes_polish_price()
+    public async Task LinkedIn_parser_normalizes_a_job_post()
     {
-        var parser = new SourceAParser();
-        var email = new EmailMessage("1", "offers@source-a.example", "test", "<p>Title: Phone | Producer: ACME | Price: 1 599,99 zł</p>", DateTimeOffset.UtcNow);
+        var parser = new LinkedInJobParser();
+        var email = new EmailMessage("message-1", "jobs@linkedin.com", "test", "<p>Job ID: li-42 | Title: Senior .NET Engineer | Company: Contoso | Location: Warsaw, Poland | Employment Type: Full-time | Salary: 20 000-25 000 PLN | Description: Build distributed .NET services | URL: https://example.test/jobs/li-42</p>", DateTimeOffset.UtcNow);
         var result = await parser.ParseAsync(email, CancellationToken.None);
-        Assert.Equal("Phone", result.DisplayTitle);
-        Assert.Equal("ACME", result.ParsedData["producer"]);
-        Assert.Equal(1599.99m, result.SearchData["price"]);
+        Assert.Equal("Senior .NET Engineer", result.DisplayTitle);
+        Assert.Equal("Contoso", result.ParsedData["company"]);
+        Assert.Equal("li-42", result.SourceExternalId);
+        Assert.Equal("Warsaw, Poland", result.SearchData["location"]);
     }
 
     [Fact]
@@ -28,8 +30,8 @@ public sealed class ParserTests
     [Fact]
     public async Task Missing_required_price_is_rejected()
     {
-        var parser = new SourceBParser();
-        var email = new EmailMessage("1", "sales@source-b.example", "test", "Title: Phone | Producer: ACME", DateTimeOffset.UtcNow);
+        var parser = new JustJoinItJobParser();
+        var email = new EmailMessage("1", "alerts@justjoin.it", "test", "Job ID: jj-1 | Title: Engineer | Company: ACME", DateTimeOffset.UtcNow);
         await Assert.ThrowsAsync<FormatException>(() => parser.ParseAsync(email, CancellationToken.None));
     }
 

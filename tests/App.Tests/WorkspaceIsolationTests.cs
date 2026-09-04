@@ -30,8 +30,8 @@ public sealed class WorkspaceIsolationTests
 
     private static SourceItem CreateItem(string workspace, string title) => new()
     {
-        WorkspaceKey = workspace, SourceKey = "source-a", SourceExternalId = title, DisplayTitle = title,
-        ParsedDataJson = "{}", SearchDataJson = "{}", WorkflowStatus = "TO_LIST", ParserKey = "source-a", ParserVersion = 1,
+        WorkspaceKey = workspace, SourceKey = "linkedin", SourceExternalId = title, DisplayTitle = title,
+        ParsedDataJson = "{}", SearchDataJson = "{}", WorkflowStatus = "NEW", ParserKey = "linkedin", ParserVersion = 1,
         SourceReceivedAt = DateTimeOffset.UtcNow
     };
 }

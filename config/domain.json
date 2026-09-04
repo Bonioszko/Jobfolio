@@ -1,14 +1,20 @@
 {
-  "sourceItem": { "singular": "Listing", "plural": "Listings" },
-  "generatedDocument": { "singular": "Description", "plural": "Descriptions" },
+  "sourceItem": { "singular": "Job", "plural": "Jobs" },
+  "generatedDocument": { "singular": "CV", "plural": "CVs" },
   "fields": [
-    { "key": "producer", "label": "Producer", "type": "string", "showInDashboard": true },
-    { "key": "price", "label": "Price", "type": "money", "showInDashboard": true }
+    { "key": "company", "label": "Company", "type": "string", "showInDashboard": true },
+    { "key": "location", "label": "Location", "type": "string", "showInDashboard": true },
+    { "key": "employmentType", "label": "Employment type", "type": "string", "showInDashboard": true },
+    { "key": "salary", "label": "Salary", "type": "string", "showInDashboard": true },
+    { "key": "description", "label": "Description", "type": "text", "showInDashboard": false },
+    { "key": "url", "label": "Job URL", "type": "url", "showInDashboard": false }
   ],
   "statuses": [
-    { "code": "NO_ACTION", "label": "No Action" },
-    { "code": "TO_LIST", "label": "To List" },
-    { "code": "LISTED", "label": "Listed" },
-    { "code": "SKIP", "label": "Skip" }
+    { "code": "NEW", "label": "New" },
+    { "code": "TO_APPLY", "label": "To apply" },
+    { "code": "SKIP", "label": "Skip" },
+    { "code": "APPLIED", "label": "Applied" },
+    { "code": "INTERVIEWING", "label": "Interviewing" },
+    { "code": "REJECTED", "label": "Rejected" }
   ]
 }

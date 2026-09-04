@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using App.Application;
 using App.Domain;
 using App.Parsers;
+using App.Parsers.Sources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +25,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<JobProcessor>();
         services.AddSingleton<IGenerationQueue, PostgresGenerationQueue>();
         services.AddSingleton<ICompilationQueue, PostgresCompilationQueue>();
-        services.AddSingleton<ISourceParser, SourceAParser>();
-        services.AddSingleton<ISourceParser, SourceBParser>();
-        services.AddSingleton<ISourceParser, SourceCParser>();
+        services.AddSingleton<ISourceParser, LinkedInJobParser>();
+        services.AddSingleton<ISourceParser, JustJoinItJobParser>();
+        services.AddSingleton<ISourceParser, NoFluffJobsParser>();
         services.AddSingleton<ISourceParserRegistry, SourceParserRegistry>();
         services.AddSingleton<IAiDocumentGenerator, DemoDocumentGenerator>();
         services.AddSingleton<ITexCompiler, TectonicCompiler>();
@@ -39,9 +40,9 @@ public sealed class DemoWorkspaceSeeder(AppDbContext db, ISourceParserRegistry r
 {
     private static readonly (string File, string Sender)[] Fixtures =
     {
-        ("source-a-item-01.html", "offers@source-a.example"), ("source-a-item-02.html", "offers@source-a.example"),
-        ("source-a-item-03.html", "offers@source-a.example"), ("source-b-item-01.html", "sales@source-b.example"),
-        ("source-b-item-02.html", "sales@source-b.example"), ("source-c-item-01.html", "notify@source-c.example")
+        ("linkedin-job-01.html", "jobs-noreply@linkedin.com"), ("linkedin-job-02.html", "jobs-noreply@linkedin.com"),
+        ("justjoinit-job-01.html", "alerts@justjoin.it"), ("justjoinit-job-02.html", "alerts@justjoin.it"),
+        ("nofluffjobs-job-01.html", "jobs@nofluffjobs.com"), ("nofluffjobs-job-02.html", "jobs@nofluffjobs.com")
     };
 
     public async Task SeedAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -51,15 +52,15 @@ public sealed class DemoWorkspaceSeeder(AppDbContext db, ISourceParserRegistry r
         foreach (var (file, sender) in Fixtures)
         {
             var html = await File.ReadAllTextAsync(Path.Combine(fixtureRoot, file), cancellationToken);
-            var email = new EmailMessage(file, sender, "New listing", html, DateTimeOffset.UtcNow.AddMinutes(-Array.IndexOf(Fixtures, (file, sender)) * 17));
+            var email = new EmailMessage(file, sender, "New job matching your alert", html, DateTimeOffset.UtcNow.AddMinutes(-Array.IndexOf(Fixtures, (file, sender)) * 17));
             var selection = registry.Select(email);
             if (selection.Match != ParserMatch.Matched) throw new InvalidOperationException($"Fixture {file} did not match exactly one parser.");
             var result = await selection.Parser!.ParseAsync(email, cancellationToken);
             db.SourceItems.Add(new SourceItem
             {
-                WorkspaceKey = workspace, SourceKey = result.SourceKey, SourceExternalId = file,
+                WorkspaceKey = workspace, SourceKey = result.SourceKey, SourceExternalId = result.SourceExternalId,
                 DisplayTitle = result.DisplayTitle, ParsedDataJson = JsonSerializer.Serialize(result.ParsedData, JsonDefaults.Web),
-                SearchDataJson = JsonSerializer.Serialize(result.SearchData, JsonDefaults.Web), WorkflowStatus = "TO_LIST",
+                SearchDataJson = JsonSerializer.Serialize(result.SearchData, JsonDefaults.Web), WorkflowStatus = "NEW",
                 ParserKey = selection.Parser.Key, ParserVersion = selection.Parser.Version, SourceReceivedAt = email.ReceivedAt,
                 DemoEmailHtml = html
             });
