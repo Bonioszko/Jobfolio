@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.appdata/
+.artifacts/
+artifacts/
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+.env
+*.user
+*.suo

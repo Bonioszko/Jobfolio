@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/App.AiWorker/App.AiWorker.csproj" />
+    <Project Path="src/App.Api/App.Api.csproj" />
+    <Project Path="src/App.Application/App.Application.csproj" />
+    <Project Path="src/App.CompilerWorker/App.CompilerWorker.csproj" />
+    <Project Path="src/App.DemoCleanup/App.DemoCleanup.csproj" />
+    <Project Path="src/App.Domain/App.Domain.csproj" />
+    <Project Path="src/App.GmailSync/App.GmailSync.csproj" />
+    <Project Path="src/App.Infrastructure/App.Infrastructure.csproj" />
+    <Project Path="src/App.Parsers/App.Parsers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/App.Tests/App.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,14 @@
+{
+  "sourceItem": { "singular": "Listing", "plural": "Listings" },
+  "generatedDocument": { "singular": "Description", "plural": "Descriptions" },
+  "fields": [
+    { "key": "producer", "label": "Producer", "type": "string", "showInDashboard": true },
+    { "key": "price", "label": "Price", "type": "money", "showInDashboard": true }
+  ],
+  "statuses": [
+    { "code": "NO_ACTION", "label": "No Action" },
+    { "code": "TO_LIST", "label": "To List" },
+    { "code": "LISTED", "label": "Listed" },
+    { "code": "SKIP", "label": "Skip" }
+  ]
+}
