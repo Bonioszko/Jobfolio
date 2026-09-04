@@ -7,7 +7,7 @@ namespace App.Tests;
 public sealed class WorkspaceIsolationTests
 {
     [Fact]
-    public async Task Listing_never_returns_another_demo_sessions_item()
+    public async Task Job_listing_never_returns_another_demo_sessions_item()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         await using var db = new AppDbContext(options);

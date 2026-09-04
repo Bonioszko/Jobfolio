@@ -28,11 +28,39 @@ public sealed class ParserTests
     }
 
     [Fact]
-    public async Task Missing_required_price_is_rejected()
+    public async Task Missing_required_description_is_rejected()
     {
         var parser = new JustJoinItJobParser();
         var email = new EmailMessage("1", "alerts@justjoin.it", "test", "Job ID: jj-1 | Title: Engineer | Company: ACME", DateTimeOffset.UtcNow);
         await Assert.ThrowsAsync<FormatException>(() => parser.ParseAsync(email, CancellationToken.None));
+    }
+
+    [Theory]
+    [InlineData("linkedin-job-01.html", "jobs@linkedin.com")]
+    [InlineData("linkedin-job-02.html", "jobs@linkedin.com")]
+    [InlineData("justjoinit-job-01.html", "alerts@justjoin.it")]
+    [InlineData("justjoinit-job-02.html", "alerts@justjoin.it")]
+    [InlineData("nofluffjobs-job-01.html", "jobs@nofluffjobs.com")]
+    [InlineData("nofluffjobs-job-02.html", "jobs@nofluffjobs.com")]
+    public async Task Demo_fixture_matches_exactly_one_parser_and_parses(string file, string sender)
+    {
+        var registry = new SourceParserRegistry([new LinkedInJobParser(), new JustJoinItJobParser(), new NoFluffJobsParser()]);
+        var root = FindRepositoryDirectory();
+        var html = await File.ReadAllTextAsync(Path.Combine(root, "demo-fixtures", "emails", file));
+        var selection = registry.Select(new EmailMessage(file, sender, "Job alert", html, DateTimeOffset.UtcNow));
+
+        Assert.Equal(ParserMatch.Matched, selection.Match);
+        var result = await selection.Parser!.ParseAsync(new EmailMessage(file, sender, "Job alert", html, DateTimeOffset.UtcNow), CancellationToken.None);
+        Assert.False(string.IsNullOrWhiteSpace(result.SourceExternalId));
+        Assert.False(string.IsNullOrWhiteSpace(result.DisplayTitle));
+        Assert.True(result.ParsedData.ContainsKey("description"));
+    }
+
+    private static string FindRepositoryDirectory()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "demo-fixtures"))) directory = directory.Parent;
+        return directory?.FullName ?? throw new DirectoryNotFoundException("Repository root not found.");
     }
 
     private sealed class AlwaysParser(string key) : ISourceParser

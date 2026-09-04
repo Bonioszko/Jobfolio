@@ -14,7 +14,7 @@ public abstract partial class DelimitedJobEmailParser : ISourceParser
     public Task<ParseResult> ParseAsync(EmailMessage email, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var text = Normalize(WebUtility.HtmlDecode(TagRegex().Replace(email.HtmlBody, " ")));
+        var text = Normalize(WebUtility.HtmlDecode(TagRegex().Replace(email.HtmlBody, " | ")));
         var jobId = Required(text, "Job ID");
         var title = Required(text, "Title");
         var company = Required(text, "Company");
