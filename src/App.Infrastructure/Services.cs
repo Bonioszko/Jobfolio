@@ -74,7 +74,7 @@ public sealed class DemoWorkspaceSeeder(AppDbContext db, ISourceParserRegistry r
         }
         var rules = new UserRuleDocument { WorkspaceKey = workspace, CurrentVersion = 1 };
         db.UserRuleDocuments.Add(rules);
-        db.UserRuleVersions.Add(new UserRuleVersion { WorkspaceKey = workspace, RuleDocumentId = rules.Id, Version = 1, Markdown = "- Use a concise, professional tone.\n- Include producer and price.\n- Do not invent product facts." });
+        db.UserRuleVersions.Add(new UserRuleVersion { WorkspaceKey = workspace, RuleDocumentId = rules.Id, Version = 1, Markdown = "# Candidate facts\n- Name: Alex Morgan\n- 8 years of software engineering experience\n- Skills: C#, .NET, ASP.NET Core, PostgreSQL, SQL, React, TypeScript, Docker, Terraform, Google Cloud, automated testing, CI/CD, distributed systems, mentoring\n- Location: Warsaw, Poland\n\nUse only these facts as candidate claims. Tailor emphasis to the selected job; never invent experience." });
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -89,24 +89,6 @@ public sealed class DemoWorkspaceSeeder(AppDbContext db, ISourceParserRegistry r
         }
         throw new DirectoryNotFoundException(string.Join(Path.DirectorySeparatorChar, segments));
     }
-}
-
-public sealed class DemoDocumentGenerator : IAiDocumentGenerator
-{
-    public Task<string> GenerateAsync(string sourceSnapshotJson, string template, string rules, string? instruction, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        using var json = JsonDocument.Parse(sourceSnapshotJson);
-        var root = json.RootElement;
-        var title = Escape(root.GetProperty("displayTitle").GetString() ?? "Item");
-        var parsed = root.GetProperty("parsedData");
-        var producer = Escape(parsed.GetProperty("producer").GetString() ?? "Unknown");
-        var price = parsed.GetProperty("price");
-        var amount = price.GetProperty("amount").GetDecimal().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-        var content = $"\\textbf{{Producer:}} {producer}\\\\\n\\textbf{{Price:}} {amount} PLN\\\\\n\nA concise demo description generated deterministically from the parsed email.";
-        return Task.FromResult(template.Replace("{{title}}", title, StringComparison.Ordinal).Replace("{{content}}", content, StringComparison.Ordinal));
-    }
-    private static string Escape(string value) => Regex.Replace(value, @"([#$%&_{}])", @"\$1");
 }
 
 public static partial class TexSafety
