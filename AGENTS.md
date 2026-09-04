@@ -6,21 +6,21 @@ This file defines the engineering rules for AI coding agents working in this rep
 
 Treat these instructions as project-level constraints.
 
-The application is a small, secure, cloud-hosted system that:
+The application is a small, secure, locally hosted first version designed for a later cloud migration. It:
 
-1. receives emails,
-2. parses them with source-specific deterministic parsers,
-3. stores normalized `SourceItem` objects,
-4. lets users manage workflow statuses,
-5. combines a selected `SourceItem`, user rules, system rules, and a TeX template,
-6. generates a versioned TeX document asynchronously,
+1. receives job-alert emails,
+2. parses them with provider-specific deterministic parsers,
+3. stores normalized job posts as generic `SourceItem` objects,
+4. lets users manage application workflow statuses,
+5. combines a selected job, verified candidate rules, system rules, and a base CV TeX template,
+6. generates a tailored, versioned TeX CV asynchronously,
 7. compiles the exact selected TeX version asynchronously,
 8. stores the resulting PDF privately,
 9. supports two real users and isolated public demo sessions.
 
-The temporary example domain is Allegro listings, but the architecture MUST remain domain-independent.
+The active domain is job-post ingestion and tailored CV generation, while the reusable architecture MUST remain domain-independent.
 
-The real domain may later replace the Allegro analogy with a single focused migration.
+Job-alert emails from providers such as LinkedIn, Just Join IT, and No Fluff Jobs are parsed into normalized source items. Users select a base CV template and tailor a versioned CV to a specific posting.
 
 ---
 
@@ -31,15 +31,15 @@ Keep domain-specific behavior at the edges.
 The reusable core flow is:
 
 ```text
-EMAIL
+JOB-ALERT EMAIL
   ↓
-SOURCE-SPECIFIC PARSER
+PROVIDER-SPECIFIC PARSER
   ↓
-NORMALIZED SOURCE ITEM
+NORMALIZED SOURCE ITEM (JOB POST)
   ↓
-USER WORKFLOW
+APPLICATION WORKFLOW
   ↓
-IMMUTABLE RULES + TEMPLATE + SOURCE DATA
+IMMUTABLE CANDIDATE RULES + BASE CV TEMPLATE + JOB SNAPSHOT
   ↓
 GENERATION JOB
   ↓
@@ -47,7 +47,7 @@ AI QUEUE
   ↓
 AI WORKER
   ↓
-VERSIONED TEX
+VERSIONED TAILORED CV TEX
   ↓
 COMPILE JOB
   ↓
@@ -84,10 +84,17 @@ Use the following stack unless there is a strong documented reason to change it.
 - Monaco Editor
 - PDF.js
 
-## Cloud
+## Local infrastructure
+
+- PostgreSQL 17 in Docker
+- Entity Framework Core in `App.Infrastructure`
+- private local artifact storage
+- database-backed local job polling
+
+## Future cloud
 
 - Google Cloud Run
-- Google Cloud Firestore
+- managed PostgreSQL, with the exact service selected during cloud migration
 - Google Cloud Storage
 - Google Cloud Tasks
 - Google Cloud Scheduler
@@ -109,9 +116,9 @@ Use the following stack unless there is a strong documented reason to change it.
 
 - xUnit
 - Playwright
-- Firestore emulator where useful
+- PostgreSQL integration tests where useful
 
-Do not introduce SQL, Entity Framework, MongoDB, Redis, RabbitMQ, Kafka, Kubernetes, Elasticsearch, a vector database, RAG, or another infrastructure component without a concrete requirement.
+PostgreSQL and Entity Framework Core are the approved persistence stack for the first version. Do not introduce MongoDB, Redis, RabbitMQ, Kafka, Kubernetes, Elasticsearch, a vector database, RAG, or another infrastructure component without a concrete requirement.
 
 Prefer the simplest secure design that satisfies the requirement.
 
@@ -215,7 +222,7 @@ ITokenCipher
 Infrastructure implementations may include:
 
 ```text
-FirestoreSourceItemRepository
+PostgresSourceItemRepository
 GoogleCloudTasksGenerationQueue
 GoogleCloudTasksCompilationQueue
 OpenAiDocumentGenerator
@@ -224,7 +231,7 @@ GmailEmailProvider
 KmsTokenCipher
 ```
 
-Do not reference `FirestoreDb` throughout controllers or application services.
+Do not reference `DbContext` throughout controllers or application services.
 
 Do not reference Google Cloud Tasks directly from controllers.
 
@@ -254,12 +261,12 @@ PdfArtifact
 WorkflowStatusCode
 ```
 
-Avoid domain-specific core names such as:
+Avoid coupling reusable core infrastructure to presentation-specific names such as:
 
 ```text
-AllegroListing
-ListingDescription
-ProductDescriptionJob
+JobPostRecord
+TailoredCvJob
+LinkedInApplication
 FireAlert
 NewsArticle
 ```
@@ -296,7 +303,7 @@ The frontend must consume the backend-provided domain configuration.
 
 Do not duplicate status lists or parsed-field definitions in React.
 
-Do not hard-code `"Producer"`, `"Price"`, `"Listing"`, `"To List"` throughout the UI.
+Do not hard-code `"Company"`, `"Location"`, `"Job"`, or `"To apply"` throughout the UI.
 
 ---
 
@@ -479,7 +486,7 @@ expiresAt
 
 `App.DemoCleanup` must periodically remove:
 
-- expired demo Firestore data,
+- expired demo PostgreSQL rows,
 - demo PDFs,
 - demo compiler logs,
 - other demo artifacts.
@@ -560,7 +567,7 @@ Gmail refresh tokens:
 - never go into logs,
 - never go to AI,
 - never go to the compiler,
-- must be encrypted before Firestore persistence.
+- must be encrypted before PostgreSQL persistence.
 
 Use Cloud KMS.
 
@@ -616,9 +623,9 @@ Example:
 
 ```text
 App.Parsers/Sources/
-  SourceAParser.cs
-  SourceBParser.cs
-  SourceCParser.cs
+  LinkedInJobParser.cs
+  JustJoinItJobParser.cs
+  NoFluffJobsParser.cs
 ```
 
 Prefer:
@@ -710,44 +717,60 @@ public sealed class SourceItem
 
 `ParsedData` contains full normalized domain data.
 
-`SearchData` contains scalar values required by known Firestore dashboard queries.
+For the current job domain it contains:
+
+```text
+company
+location
+employmentType
+salary
+description
+url
+```
+
+`DisplayTitle` is the job title and `SourceExternalId` is the provider's job identifier. Gmail message identifiers belong to email-ingestion metadata rather than `ParsedData`.
+
+`SearchData` contains scalar values required by known dashboard queries and indexes.
 
 Do not over-index arbitrary parsed fields.
 
 ---
 
-# 23. Firestore principles
+# 23. PostgreSQL principles
 
-Firestore is the application database.
+PostgreSQL is the application database for the first version.
 
-Do not imitate a relational database unnecessarily.
+Entity Framework Core belongs in `App.Infrastructure`. Keep entity configuration, migrations, and PostgreSQL-specific queries out of controllers and reusable domain logic.
 
-Use relatively self-contained documents.
+Use normalized relational tables for ownership, immutable versions, jobs, status history, and artifact metadata. JSONB is appropriate for generic `ParsedData`, `SearchData`, and immutable source snapshots where the schema is intentionally domain-configurable.
 
-Use immutable subcollections for versions where appropriate.
+Every user-owned row must carry or be unambiguously joined to a workspace key. Repository and service queries must scope by workspace before resource ID.
 
-Likely collections:
+Core tables include:
 
 ```text
-gmailAccounts/
-emailMessages/
-sourceItems/
-generationJobs/
-compileJobs/
-pdfArtifacts/
-auditEvents/
-
-documentTemplates/{templateId}/versions/
-userRuleDocuments/{documentId}/versions/
-generatedDocuments/{documentId}/versions/
-sourceItems/{sourceItemId}/statusHistory/
+demo_sessions
+source_items
+status_history
+document_templates
+document_template_versions
+user_rule_documents
+user_rule_versions
+generation_jobs
+generated_documents
+generated_document_versions
+compile_jobs
+pdf_artifacts
+gmail_accounts
+email_messages
+audit_events
 ```
 
-Use transactions only where concurrency matters.
+Use transactions only where concurrency or multi-row consistency matters.
 
 ---
 
-# 24. Firestore transactions
+# 24. PostgreSQL transactions
 
 Use transactions for:
 
@@ -762,7 +785,7 @@ Do not wrap every immutable insert in a transaction without reason.
 
 ---
 
-# 25. Firestore query design
+# 25. PostgreSQL query design
 
 Design queries deliberately.
 
@@ -774,13 +797,13 @@ Expected dashboard filters:
 - created/received time,
 - cursor pagination.
 
-Use Firestore cursor pagination.
+Use keyset/cursor pagination based on a stable ordered tuple such as `(receivedAt, id)`.
 
-Do not implement SQL-style offset pagination.
+Avoid offset pagination for growing job lists.
 
 Do not promise arbitrary full-text search.
 
-Do not add Elasticsearch solely for convenience.
+Use deliberate PostgreSQL indexes for workspace, status, source, provider external ID, and received time. Do not add Elasticsearch solely for convenience.
 
 ---
 
@@ -791,7 +814,7 @@ Statuses must come from domain configuration.
 Do not create:
 
 ```csharp
-enum ListingStatus
+enum JobPostingStatus
 ```
 
 Use a generic code/value object.
@@ -801,19 +824,19 @@ Changing document-generation state must not implicitly change workflow status.
 Example:
 
 ```text
-Generate document
+Tailor CV
 ```
 
 must NOT automatically do:
 
 ```text
-NO_ACTION → TO_LIST
+NEW → TO_APPLY
 ```
 
 Compilation must NOT automatically do:
 
 ```text
-TO_LIST → LISTED
+TO_APPLY → APPLIED
 ```
 
 Workflow status changes are explicit user actions.
@@ -822,7 +845,7 @@ Workflow status changes are explicit user actions.
 
 # 27. Templates
 
-Provide three initial example `.tex` templates.
+Provide three initial example base-CV `.tex` templates. In the generic core they remain `DocumentTemplate` and immutable `DocumentTemplateVersion` records.
 
 Users can:
 
@@ -849,10 +872,10 @@ Each real user owns one primary Markdown rules/context document.
 
 Demo sessions receive a seeded rules document.
 
-Temporary example meaning may include:
+Current job/CV meaning may include:
 
-- company information,
-- description-generation rules.
+- verified candidate experience and skills,
+- CV-tailoring preferences and constraints.
 
 Core code must call it:
 
@@ -946,7 +969,7 @@ HTTP request
    ↓
 validate/authenticate
    ↓
-create persistent Firestore job
+create persistent PostgreSQL job
    ↓
 enqueue job ID
    ↓
@@ -957,9 +980,9 @@ Never hold a browser request open for generation or compilation.
 
 ---
 
-# 33. Cloud Tasks queues
+# 33. Queue separation
 
-Use two separate queues:
+Use two separate logical queues:
 
 ```text
 ai-generation-queue
@@ -977,9 +1000,9 @@ They have different:
 
 ---
 
-# 34. Firestore vs queue responsibility
+# 34. PostgreSQL vs queue responsibility
 
-Firestore stores:
+PostgreSQL stores:
 
 - what the job is,
 - who owns it,
@@ -990,7 +1013,7 @@ Firestore stores:
 - output reference,
 - safe error information.
 
-Cloud Tasks handles:
+The delivery adapter handles:
 
 - delivery,
 - retry,
@@ -998,7 +1021,7 @@ Cloud Tasks handles:
 - rate limiting,
 - worker invocation.
 
-Cloud Tasks is not the business-state database.
+The local adapter uses PostgreSQL-backed polling by dedicated workers. The future production adapter may use Cloud Tasks for delivery. Neither delivery mechanism is the business-state database.
 
 ---
 
@@ -1056,18 +1079,26 @@ public interface ICompilationQueue
 }
 ```
 
-Production:
+Future cloud:
 
 ```text
 GoogleCloudTasksGenerationQueue
 GoogleCloudTasksCompilationQueue
 ```
 
-Local/test:
+Local:
 
 ```text
-ImmediateGenerationQueue
-ImmediateCompilationQueue
+PostgresGenerationQueue
+PostgresCompilationQueue
+dedicated database-polling workers
+```
+
+Tests may use:
+
+```text
+RecordingGenerationQueue
+RecordingCompilationQueue
 ```
 
 Controllers must depend on abstractions.
@@ -1146,7 +1177,7 @@ Transient examples:
 - network error,
 - rate limit,
 - temporary OpenAI failure,
-- temporary Firestore failure,
+- temporary PostgreSQL failure,
 - temporary GCS failure.
 
 Permanent examples:
@@ -1415,7 +1446,7 @@ Compiler worker must:
 - have no Gmail credentials,
 - have no OpenAI credentials,
 - have no OAuth refresh tokens,
-- have minimal Firestore permissions,
+- have minimal PostgreSQL permissions,
 - have minimal GCS permissions,
 - enforce input-size limits,
 - enforce timeout,
@@ -1488,7 +1519,7 @@ Demo:
 demo/{sessionId}/documents/{documentId}/versions/{versionId}/{compileJobId}.pdf
 ```
 
-Firestore stores only artifact metadata.
+PostgreSQL stores only artifact metadata.
 
 ---
 
@@ -1743,7 +1774,7 @@ Cover:
 
 Cover:
 
-- Firestore repository behavior,
+- PostgreSQL repository behavior,
 - transactions,
 - status history,
 - user isolation,
@@ -1822,8 +1853,8 @@ feat(auth): add whitelisted Google authentication
 test(auth): reject non-whitelisted users
 
 feat(parsers): add source parser abstraction
-feat(parsers): implement source A parser
-test(parsers): add source A regression fixtures
+feat(parsers): implement LinkedIn job parser
+test(parsers): add LinkedIn regression fixtures
 
 feat(queue): add generation queue abstraction
 feat(queue): add Cloud Tasks generation queue
@@ -1884,7 +1915,7 @@ Examples:
 
 ```text
 feat(demo): create isolated demo sessions
-fix(parsers): handle missing price in source B emails
+fix(parsers): handle missing description in LinkedIn job emails
 refactor(queue): extract generation job claiming service
 test(security): cover cross-demo-session access
 docs(architecture): document AI worker boundary
@@ -2032,7 +2063,7 @@ Avoid:
 - magic strings scattered everywhere,
 - static service locators,
 - giant service classes,
-- generic repository abstractions that hide important Firestore behavior,
+- generic repository abstractions that hide important PostgreSQL behavior,
 - unnecessary reflection,
 - unnecessary metaprogramming.
 
@@ -2042,7 +2073,7 @@ Avoid:
 
 Use asynchronous APIs for:
 
-- Firestore,
+- PostgreSQL,
 - Gmail,
 - OpenAI,
 - GCS,
@@ -2073,7 +2104,7 @@ A controller should typically:
 3. call application service,
 4. map result to HTTP response.
 
-Do not put parser logic, Firestore queries, OpenAI prompt construction, or Tectonic process management directly in controllers.
+Do not put parser logic, Entity Framework queries, OpenAI prompt construction, or Tectonic process management directly in controllers.
 
 ---
 
@@ -2220,7 +2251,7 @@ Production GCP infrastructure should be represented in Terraform.
 Expected resources include:
 
 - Artifact Registry,
-- Firestore,
+- Cloud SQL for PostgreSQL,
 - private GCS bucket,
 - App.Api Cloud Run service,
 - App.AiWorker private Cloud Run service,
@@ -2235,7 +2266,7 @@ Expected resources include:
 - Secret Manager,
 - service accounts,
 - IAM,
-- Firestore indexes.
+- PostgreSQL indexes and migration execution.
 
 Avoid manual production-only configuration that is not documented or codified.
 
@@ -2275,7 +2306,7 @@ Do not implement unless explicitly requested:
 - roles,
 - subscriptions,
 - billing,
-- Allegro API integration,
+- automatic submission to job boards,
 - automatic publishing,
 - AI-based email parsing,
 - autonomous agents,
@@ -2304,7 +2335,7 @@ scaffolding
 → domain config
 → auth
 → demo sessions
-→ Firestore foundation
+→ PostgreSQL foundation
 → parser framework
 → demo seeding
 → dashboard
@@ -2379,9 +2410,9 @@ If the ambiguity materially changes architecture, document the assumption in the
 
 ---
 
-# 90. Domain replacement rule
+# 90. Domain evolution rule
 
-When the temporary Allegro analogy is replaced, primarily modify:
+The active domain is job-post ingestion and tailored CV generation. When adding or changing job providers, parsed fields, CV content, or application workflow terminology, primarily modify:
 
 ```text
 config/domain.json
@@ -2400,7 +2431,7 @@ Do not unnecessarily rewrite:
 authentication
 real-user allowlist
 demo-session architecture
-Firestore infrastructure
+PostgreSQL infrastructure
 Gmail OAuth
 Gmail synchronization
 SourceItem abstraction
