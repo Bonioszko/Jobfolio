@@ -1,6 +1,6 @@
 # Job Parser
 
-Local-first .NET 10 and React implementation of the email-to-versioned-TeX-to-PDF workflow. The initial runtime uses PostgreSQL in Docker; cloud adapters are intentionally deferred.
+Local-first .NET 10 and React implementation for parsing job-alert emails, tracking applications, tailoring versioned TeX CVs, and compiling private PDFs. The initial runtime uses PostgreSQL in Docker; cloud adapters are intentionally deferred.
 
 ## Start PostgreSQL
 
@@ -40,6 +40,6 @@ Tectonic must be installed on the compiler worker's `PATH`; compilation is delib
 
 ## Current scope
 
-Implemented: solution layering, PostgreSQL schema, generic domain configuration, parser registry and three deterministic parsers, isolated demo authentication/seeding, item list/detail/status APIs, immutable template/rule/job/document models, deterministic demo generator, TeX validation/compiler and private local artifact adapter.
+Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, three base CV templates, immutable template/rule/job/document models, deterministic CV tailoring, TeX validation/compiler, and private local artifact storage.
 
 Next phases: template/rule API, generation and compiler worker job orchestration, React dashboard, Google OIDC/Gmail adapters, OpenAI provider, production GCP/Terraform.

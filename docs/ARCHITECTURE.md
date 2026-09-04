@@ -1,6 +1,6 @@
 # Architecture
 
-The reusable pipeline is `Email -> SourceParser -> SourceItem -> GenerationJob -> GeneratedDocumentVersion -> CompileJob -> PdfArtifact`.
+The reusable pipeline is `Job-alert email -> provider SourceParser -> normalized SourceItem -> GenerationJob -> tailored CV version -> CompileJob -> PdfArtifact`.
 
 Projects preserve inward dependencies: Domain has no infrastructure dependencies; Application owns contracts; Infrastructure supplies adapters; API and workers are process entry points.
 
