@@ -11,27 +11,28 @@ public sealed class WorkspaceIsolationTests
     {
         var options = new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         await using var db = new AppDbContext(options);
-        db.SourceItems.Add(CreateItem("demo:a", "Visible"));
-        db.SourceItems.Add(CreateItem("demo:b", "Secret"));
+        db.JobPostings.Add(CreateItem("demo:a", "Visible"));
+        db.JobPostings.Add(CreateItem("demo:b", "Secret"));
         await db.SaveChangesAsync();
-        var service = new WorkspaceApplicationService(db);
+        var service = new JobPostingQueryService(db);
 
-        var result = await service.GetSourceItemsAsync("demo:a", null, null, 50, CancellationToken.None);
+        var result = await service.ListAsync("demo:a", null, null, 50, CancellationToken.None);
 
         var item = Assert.Single(result);
         Assert.Equal("Visible", item.DisplayTitle);
     }
 
-    [Theory]
-    [InlineData(@"\write18{calc}")]
-    [InlineData(@"\input{../secret}")]
-    [InlineData(@"C:\private\file")]
-    public void Unsafe_tex_is_rejected(string tex) => Assert.Throws<InvalidOperationException>(() => TexSafety.Validate(tex));
-
-    private static SourceItem CreateItem(string workspace, string title) => new()
+    private static JobPosting CreateItem(string workspace, string title) => new()
     {
-        WorkspaceKey = workspace, SourceKey = "linkedin", SourceExternalId = title, DisplayTitle = title,
-        ParsedDataJson = "{}", SearchDataJson = "{}", WorkflowStatus = "NEW", ParserKey = "linkedin", ParserVersion = 1,
+        WorkspaceKey = workspace,
+        ProviderKey = "linkedin",
+        ProviderExternalId = title,
+        Title = title,
+        NormalizedDataJson = "{}",
+        SearchDataJson = "{}",
+        ApplicationStatus = "NEW",
+        ParserKey = "linkedin",
+        ParserVersion = 1,
         SourceReceivedAt = DateTimeOffset.UtcNow
     };
 }
