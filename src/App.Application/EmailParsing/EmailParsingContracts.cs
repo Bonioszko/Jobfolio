@@ -5,7 +5,8 @@ public sealed record EmailMessage(
     string Sender,
     string Subject,
     string HtmlBody,
-    DateTimeOffset ReceivedAt);
+    DateTimeOffset ReceivedAt,
+    string? TextBody = null);
 
 public sealed record ParseResult(
     string SourceKey,
@@ -28,7 +29,9 @@ public interface ISourceParser
     string Key { get; }
     int Version { get; }
     bool CanParse(EmailMessage email);
-    Task<ParseResult> ParseAsync(EmailMessage email, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ParseResult>> ParseAsync(
+        EmailMessage email,
+        CancellationToken cancellationToken);
 }
 
 public interface ISourceParserRegistry

@@ -55,21 +55,24 @@ public sealed class DemoWorkspaceSeeder(
                     $"Demo fixture '{fixture.FileName}' did not match exactly one parser.");
             }
 
-            var result = await selection.Parser.ParseAsync(email, cancellationToken);
-            db.JobPostings.Add(new JobPosting
+            var results = await selection.Parser.ParseAsync(email, cancellationToken);
+            foreach (var result in results)
             {
-                WorkspaceKey = workspaceKey,
-                ProviderKey = result.SourceKey,
-                ProviderExternalId = result.SourceExternalId,
-                Title = result.DisplayTitle,
-                NormalizedDataJson = JsonSerializer.Serialize(result.ParsedData, JsonDefaults.Web),
-                SearchDataJson = JsonSerializer.Serialize(result.SearchData, JsonDefaults.Web),
-                ApplicationStatus = "NEW",
-                ParserKey = selection.Parser.Key,
-                ParserVersion = selection.Parser.Version,
-                SourceReceivedAt = email.ReceivedAt,
-                DemoEmailHtml = html
-            });
+                db.JobPostings.Add(new JobPosting
+                {
+                    WorkspaceKey = workspaceKey,
+                    ProviderKey = result.SourceKey,
+                    ProviderExternalId = result.SourceExternalId,
+                    Title = result.DisplayTitle,
+                    NormalizedDataJson = JsonSerializer.Serialize(result.ParsedData, JsonDefaults.Web),
+                    SearchDataJson = JsonSerializer.Serialize(result.SearchData, JsonDefaults.Web),
+                    ApplicationStatus = "NEW",
+                    ParserKey = selection.Parser.Key,
+                    ParserVersion = selection.Parser.Version,
+                    SourceReceivedAt = email.ReceivedAt,
+                    DemoEmailHtml = html
+                });
+            }
         }
     }
 
