@@ -1,62 +1,98 @@
-import { useEffect, useState } from "react";
-import { ErrorMessage } from "../../../components/common/ErrorMessage";
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
-import { useCvGeneration } from "../../cv-generation/hooks/useCvGeneration";
+import { CvTailoringPanel } from "../../cv-generation/components/CvTailoringPanel";
 import type { CvTemplate } from "../../cv-templates/types/cvTemplate";
-import { GeneratedCvResult } from "../../generated-cvs/components/GeneratedCvResult";
+import type { DomainField, WorkflowStatus } from "../../domain-config/types/domainConfig";
 import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
+import { JobStatusActions } from "./JobStatusActions";
 
 type JobPostingDetailsProps = {
   documentName: string;
+  fields: DomainField[];
+  isStatusUpdating: boolean;
+  isTailoringDataLoading: boolean;
+  onStatusChange: (status: string) => Promise<void>;
   posting: JobPosting;
   rules?: CandidateRules;
+  statuses: WorkflowStatus[];
   templates: CvTemplate[];
+  workflowStatus: string;
 };
 
 export function JobPostingDetails({
   documentName,
+  fields,
+  isStatusUpdating,
+  isTailoringDataLoading,
+  onStatusChange,
   posting,
   rules,
+  statuses,
   templates,
+  workflowStatus,
 }: JobPostingDetailsProps) {
-  const [templateVersionId, setTemplateVersionId] = useState(templates[0]?.versionId ?? "");
-  const generation = useCvGeneration();
-
-  useEffect(() => {
-    if (!templates.some((template) => template.versionId === templateVersionId)) {
-      setTemplateVersionId(templates[0]?.versionId ?? "");
-    }
-  }, [templateVersionId, templates]);
-
-  const generate = () => {
-    if (!templateVersionId || !rules) return;
-
-    return generation.generate({
-      sourceItemId: posting.id,
-      templateVersionId,
-      ruleVersionId: rules.versionId,
-    });
-  };
+  const detailFields = fields.filter(
+    (field) => field.key !== "description" && field.key !== "url",
+  );
+  const company = displayValue(posting.parsedData.company);
+  const location = displayValue(posting.parsedData.location);
 
   return (
-    <>
-      <span className="eyebrow">
-        {posting.parserKey} · parser v{posting.parserVersion}
-      </span>
-      <h2>{posting.displayTitle}</h2>
-      <p>
-        <strong>{displayValue(posting.parsedData.company)}</strong> ·{" "}
-        {displayValue(posting.parsedData.location)}
-      </p>
-      <p className="description">{displayValue(posting.parsedData.description)}</p>
-      {typeof posting.parsedData.url === "string" && (
-        <a href={posting.parsedData.url} target="_blank" rel="noreferrer">
-          Open job post
-        </a>
+    <div className="job-detail">
+      <div className="detail-hero">
+        <div className="detail-hero__meta">
+          <span>{posting.sourceKey}</span>
+          <span aria-hidden="true">·</span>
+          <time dateTime={posting.sourceReceivedAt}>
+            Received {new Date(posting.sourceReceivedAt).toLocaleDateString()}
+          </time>
+        </div>
+        <h1>{posting.displayTitle}</h1>
+        <p className="detail-company">
+          <strong>{company}</strong>
+          <span aria-hidden="true">·</span>
+          <span>{location}</span>
+        </p>
+        {typeof posting.parsedData.url === "string" && (
+          <a className="external-link" href={posting.parsedData.url} target="_blank" rel="noreferrer">
+            View original posting <span aria-hidden="true">↗</span>
+          </a>
+        )}
+      </div>
+
+      <JobStatusActions
+        currentStatus={workflowStatus}
+        isUpdating={isStatusUpdating}
+        onChange={onStatusChange}
+        statuses={statuses}
+      />
+
+      <section className="detail-section" aria-labelledby="overview-heading">
+        <span className="section-kicker">ROLE OVERVIEW</span>
+        <h3 id="overview-heading">What they are looking for</h3>
+        <p className="job-description">{displayValue(posting.parsedData.description)}</p>
+      </section>
+
+      {detailFields.length > 0 && (
+        <dl className="job-facts">
+          {detailFields.map((field) => (
+            <div key={field.key}>
+              <dt>{field.label}</dt>
+              <dd>{displayValue(posting.parsedData[field.key])}</dd>
+            </div>
+          ))}
+          <div>
+            <dt>Parser</dt>
+            <dd>{posting.parserKey} · v{posting.parserVersion}</dd>
+          </div>
+        </dl>
       )}
-      <details>
-        <summary>View parsed source email</summary>
+
+      <details className="source-disclosure">
+        <summary>
+          <span>Parsed source email</span>
+          <span aria-hidden="true">+</span>
+        </summary>
         <iframe
           className="email-preview"
           sandbox=""
@@ -64,32 +100,14 @@ export function JobPostingDetails({
           title="Parsed source email"
         />
       </details>
-      <label>
-        Base CV template
-        <select
-          disabled={templates.length === 0}
-          value={templateVersionId}
-          onChange={(event) => setTemplateVersionId(event.target.value)}
-        >
-          {templates.length === 0 && <option value="">No templates available</option>}
-          {templates.map((template) => (
-            <option key={template.versionId} value={template.versionId}>
-              {template.name} · v{template.version}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button
-        disabled={!templateVersionId || !rules || generation.isGenerating}
-        onClick={() => void generate()}
-      >
-        {generation.isGenerating ? "Generating…" : `Tailor ${documentName}`}
-      </button>
-      {generation.progress && <p className="progress">{generation.progress}</p>}
-      <ErrorMessage message={generation.error} />
-      {generation.document && (
-        <GeneratedCvResult key={generation.document.versionId} document={generation.document} />
-      )}
-    </>
+
+      <CvTailoringPanel
+        documentName={documentName}
+        isLoadingResources={isTailoringDataLoading}
+        jobPostingId={posting.id}
+        rules={rules}
+        templates={templates}
+      />
+    </div>
   );
 }

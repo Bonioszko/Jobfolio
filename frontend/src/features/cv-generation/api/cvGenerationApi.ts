@@ -8,6 +8,7 @@ export type CreateCvGenerationRequest = {
   sourceItemId: string;
   templateVersionId: string;
   ruleVersionId: string;
+  customJobDescription?: string;
   instruction?: string;
 };
 

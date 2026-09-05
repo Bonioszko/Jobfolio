@@ -14,9 +14,17 @@ export function GeneratedCvResult({ document }: GeneratedCvResultProps) {
     : undefined;
 
   return (
-    <section aria-label="Generated CV">
-      <textarea aria-label="Generated TeX" value={document.tex} readOnly />
+    <section className="generated-result" aria-label="Generated CV">
+      <div className="generated-result__header">
+        <div>
+          <span className="section-kicker">GENERATED OUTPUT</span>
+          <h4>Tailored TeX</h4>
+        </div>
+        <span className="success-label">Ready</span>
+      </div>
+      <textarea className="tex-output" aria-label="Generated TeX" value={document.tex} readOnly />
       <button
+        className="secondary-action"
         disabled={compilation.isCompiling}
         onClick={() => void compilation.compile(document.versionId)}
       >
@@ -27,7 +35,7 @@ export function GeneratedCvResult({ document }: GeneratedCvResultProps) {
       {pdfUrl && (
         <>
           <iframe className="pdf-preview" title="PDF preview" src={pdfUrl} />
-          <a className="download" href={pdfUrl}>
+          <a className="download primary-action" href={pdfUrl}>
             Download PDF
           </a>
         </>
