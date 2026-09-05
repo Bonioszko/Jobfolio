@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddSingleton<ISourceParser, JustJoinItJobParser>();
         services.AddSingleton<ISourceParser, NoFluffJobsParser>();
         services.AddSingleton<ISourceParser, IndeedJobParser>();
+        services.AddSingleton<ISourceParser, PracujPlJobParser>();
         services.AddSingleton<ISourceParserRegistry, SourceParserRegistry>();
         services.AddSingleton<IAiCvGenerator, DemoCvGenerator>();
         services.AddSingleton<ITexSafetyValidator>(_ => new TexSafetyValidator(

@@ -84,6 +84,43 @@ public sealed class ParserTests
         Assert.Equal("https://pl.indeed.com/viewjob?jk=abc123def456", results[0].ParsedData["url"]);
     }
 
+    [Fact]
+    public async Task PracujPl_parser_imports_every_offer_from_real_alert_layout()
+    {
+        var email = await FixtureEmailAsync(
+            "pracujpl-alert.html",
+            "Wyszukiwane w Pracuj.pl <jobalert@wysylka.pracuj.pl>");
+        var parser = new PracujPlJobParser();
+
+        Assert.True(parser.CanParse(email));
+
+        var results = await parser.ParseAsync(email, CancellationToken.None);
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal(1, parser.Version);
+        Assert.Collection(
+            results,
+            first =>
+            {
+                Assert.Equal("1000000001", first.SourceExternalId);
+                Assert.Equal("Unity Developer", first.DisplayTitle);
+                Assert.Equal("Example Games", first.ParsedData["company"]);
+                Assert.Equal("Poznań", first.ParsedData["location"]);
+                Assert.Null(first.ParsedData["salary"]);
+                Assert.Equal(
+                    "https://www.pracuj.pl/praca/unity-developer-poznan,oferta,1000000001",
+                    first.ParsedData["url"]);
+            },
+            second =>
+            {
+                Assert.Equal("1000000002", second.SourceExternalId);
+                Assert.Equal(".NET Software Developer", second.DisplayTitle);
+                Assert.Equal("Example Systems Sp. z o.o.", second.SearchData["company"]);
+                Assert.Equal("Warszawa, Wola", second.SearchData["location"]);
+                Assert.Equal("14 000-23 000 zł netto (+ VAT) / mies.", second.ParsedData["salary"]);
+            });
+    }
+
     [Theory]
     [InlineData("alerts@nofluffjobs.com.attacker.test")]
     [InlineData("not-linkedin@example.test")]
@@ -127,7 +164,13 @@ public sealed class ParserTests
     public async Task Demo_fixture_matches_the_provider_format(string file, string sender)
     {
         var registry = new SourceParserRegistry(
-            [new LinkedInJobParser(), new JustJoinItJobParser(), new NoFluffJobsParser(), new IndeedJobParser()]);
+            [
+                new LinkedInJobParser(),
+                new JustJoinItJobParser(),
+                new NoFluffJobsParser(),
+                new IndeedJobParser(),
+                new PracujPlJobParser()
+            ]);
         var email = await FixtureEmailAsync(
             Path.Combine("demo-fixtures", "emails", file),
             sender,
