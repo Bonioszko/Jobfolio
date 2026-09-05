@@ -34,7 +34,12 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             workspace,
-            new RequestCvGeneration(posting.Id, template.Id, rules.Id, null),
+            new RequestCvGeneration(
+                posting.Id,
+                template.Id,
+                rules.Id,
+                "  Custom role requirements  ",
+                null),
             CancellationToken.None);
 
         Assert.Equal(RequestCvGenerationOutcome.Accepted, result.Outcome);
@@ -44,6 +49,9 @@ public sealed class CvGenerationServiceTests
         var persisted = await db.CvGenerationJobs.SingleAsync();
         Assert.Equal("rules-hash", persisted.SystemRulesHash);
         Assert.DoesNotContain("demoEmailHtml", persisted.JobPostingSnapshotJson);
+        Assert.Contains(
+            "\"customJobDescription\":\"Custom role requirements\"",
+            persisted.JobPostingSnapshotJson);
     }
 
     [Fact]
@@ -58,7 +66,7 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             "demo:current",
-            new RequestCvGeneration(posting.Id, Guid.NewGuid(), Guid.NewGuid(), null),
+            new RequestCvGeneration(posting.Id, Guid.NewGuid(), Guid.NewGuid(), null, null),
             CancellationToken.None);
 
         Assert.Equal(RequestCvGenerationOutcome.InvalidInput, result.Outcome);
@@ -98,12 +106,34 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             workspace,
-            new RequestCvGeneration(posting.Id, template.Id, rules.Id, null),
+            new RequestCvGeneration(posting.Id, template.Id, rules.Id, null, null),
             CancellationToken.None);
 
         Assert.Equal(RequestCvGenerationOutcome.QuotaExceeded, result.Outcome);
         Assert.Null(queue.EnqueuedJobId);
         Assert.Equal(1, await db.CvGenerationJobs.CountAsync());
+    }
+
+    [Fact]
+    public async Task Rejects_custom_job_description_over_the_configured_limit()
+    {
+        await using var db = CreateDbContext();
+        var queue = new InspectingGenerationQueue(db);
+        var service = CreateService(db, queue);
+
+        var result = await service.RequestAsync(
+            "demo:limit",
+            new RequestCvGeneration(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                new string('x', 20_001),
+                null),
+            CancellationToken.None);
+
+        Assert.Equal(RequestCvGenerationOutcome.InvalidInput, result.Outcome);
+        Assert.Null(queue.EnqueuedJobId);
+        Assert.Empty(db.CvGenerationJobs);
     }
 
     private static CvGenerationService CreateService(
@@ -114,7 +144,7 @@ public sealed class CvGenerationServiceTests
             new CvGenerationStore(db),
             queue,
             new StubSystemRulesProvider(),
-            new CvWorkflowSettings(maximumJobs, 10, 5_000, "test-model"));
+            new CvWorkflowSettings(maximumJobs, 10, 5_000, 20_000, "test-model"));
 
     private static AppDbContext CreateDbContext()
     {

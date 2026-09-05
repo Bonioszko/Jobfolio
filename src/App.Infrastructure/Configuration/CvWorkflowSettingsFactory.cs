@@ -20,6 +20,10 @@ internal static class CvWorkflowSettingsFactory
                 configuration,
                 "CvWorkflow:MaxUserInstructionCharacters",
                 5_000),
+            ConfigurationValues.GetPositiveInt(
+                configuration,
+                "CvWorkflow:MaxCustomJobDescriptionCharacters",
+                20_000),
             configuration["CvWorkflow:GeneratorModel"] ?? "demo-deterministic-v1");
 
         if (string.IsNullOrWhiteSpace(settings.GeneratorModel))

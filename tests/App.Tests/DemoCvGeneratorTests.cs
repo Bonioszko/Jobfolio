@@ -8,7 +8,11 @@ public sealed class DemoCvGeneratorTests
     [Fact]
     public async Task Tailors_template_to_job_using_matching_candidate_skills()
     {
-        const string snapshot = """{"displayTitle":"Senior .NET Engineer","parsedData":{"company":"Northstar & Co","description":"Build .NET services with PostgreSQL and Rust"}}""";
+        const string snapshot =
+            "{\"displayTitle\":\"Senior .NET Engineer\"," +
+            "\"parsedData\":{\"company\":\"Northstar & Co\"," +
+            "\"description\":\"Build .NET services with PostgreSQL and Rust\"}," +
+            "\"customJobDescription\":\"The role also needs React.\"}";
         const string template = "Role: {{target_role}} Company: {{target_company}} Summary: {{tailored_summary}} Skills: {{matched_skills}}";
 
         var result = await new DemoCvGenerator().GenerateAsync(
@@ -16,7 +20,7 @@ public sealed class DemoCvGeneratorTests
                 "system rules",
                 snapshot,
                 template,
-                "- Skills: .NET, PostgreSQL",
+                "- Skills: .NET, PostgreSQL, React",
                 null),
             CancellationToken.None);
 
@@ -24,6 +28,7 @@ public sealed class DemoCvGeneratorTests
         Assert.Contains("Senior .NET Engineer", result.Tex);
         Assert.Contains("Northstar \\& Co", result.Tex);
         Assert.Contains("PostgreSQL", result.Tex);
+        Assert.Contains("React", result.Tex);
         Assert.DoesNotContain("Rust", result.Tex);
         Assert.DoesNotContain("{{", result.Tex);
     }

@@ -6,12 +6,14 @@ public sealed record CvWorkflowSettings(
     int MaxGenerationJobsPerWorkspace,
     int MaxCompilationJobsPerWorkspace,
     int MaxUserInstructionCharacters,
+    int MaxCustomJobDescriptionCharacters,
     string GeneratorModel);
 
 public sealed record RequestCvGeneration(
     Guid JobPostingId,
     Guid TemplateVersionId,
     Guid CandidateRuleVersionId,
+    string? CustomJobDescription,
     string? Instruction);
 
 public enum RequestCvGenerationOutcome

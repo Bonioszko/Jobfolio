@@ -17,6 +17,7 @@ public sealed class CvGenerationService(
         if (request.JobPostingId == Guid.Empty ||
             request.TemplateVersionId == Guid.Empty ||
             request.CandidateRuleVersionId == Guid.Empty ||
+            request.CustomJobDescription?.Length > settings.MaxCustomJobDescriptionCharacters ||
             request.Instruction?.Length > settings.MaxUserInstructionCharacters)
         {
             return new RequestCvGenerationResult(RequestCvGenerationOutcome.InvalidInput);
@@ -37,7 +38,8 @@ public sealed class CvGenerationService(
                 displayTitle = source.Title,
                 parsedData = JsonSerializer.Deserialize<object>(
                     source.NormalizedDataJson,
-                    JsonDefaults.Web)
+                    JsonDefaults.Web),
+                customJobDescription = NormalizeOptionalText(request.CustomJobDescription)
             },
             JsonDefaults.Web);
         var job = new CvGenerationJob
@@ -79,4 +81,7 @@ public sealed class CvGenerationService(
 
     private static AsyncJobView Map(CvGenerationJob job) =>
         new(job.Id, job.Status, job.Error, job.GeneratedCvId);
+
+    private static string? NormalizeOptionalText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

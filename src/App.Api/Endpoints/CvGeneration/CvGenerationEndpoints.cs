@@ -24,6 +24,7 @@ public static class CvGenerationEndpoints
                 body.SourceItemId,
                 body.TemplateVersionId,
                 body.RuleVersionId,
+                body.CustomJobDescription,
                 body.Instruction),
             cancellationToken);
 
@@ -58,5 +59,6 @@ public static class CvGenerationEndpoints
         Guid SourceItemId,
         Guid TemplateVersionId,
         Guid RuleVersionId,
+        string? CustomJobDescription,
         string? Instruction);
 }

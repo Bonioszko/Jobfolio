@@ -17,6 +17,11 @@ public sealed class DemoCvGenerator : IAiCvGenerator
         var parsedData = root.GetProperty("parsedData");
         var company = parsedData.GetProperty("company").GetString() ?? "Target company";
         var description = parsedData.GetProperty("description").GetString() ?? string.Empty;
+        if (root.TryGetProperty("customJobDescription", out var customDescription) &&
+            customDescription.ValueKind == JsonValueKind.String)
+        {
+            description = $"{description}\n{customDescription.GetString()}";
+        }
         var candidateSkills = ExtractCandidateSkills(request.CandidateRulesMarkdown);
         var matchedSkills = candidateSkills
             .Where(skill => description.Contains(skill, StringComparison.OrdinalIgnoreCase))
