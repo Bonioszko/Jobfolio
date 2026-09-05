@@ -16,6 +16,7 @@ public sealed class PersistenceMappingTests
                 .Options);
 
         AssertMapping<JobPosting>(db, "SourceItems", nameof(JobPosting.Title), "DisplayTitle");
+        AssertMapping<GmailMessageReceipt>(db, "EmailMessages");
         AssertMapping<CvTemplate>(db, "DocumentTemplates");
         AssertMapping<CvTemplateVersion>(
             db,

@@ -14,6 +14,10 @@ public sealed class ApplicationDatabaseInitializer(
 
         if (migrations.Any())
         {
+            // This repository originally used EnsureCreated without migration history.
+            // On a fresh database this creates the complete current model; on an existing
+            // database it is a no-op. The idempotent baseline migration can then safely run.
+            await db.Database.EnsureCreatedAsync(cancellationToken);
             await db.Database.MigrateAsync(cancellationToken);
             return;
         }

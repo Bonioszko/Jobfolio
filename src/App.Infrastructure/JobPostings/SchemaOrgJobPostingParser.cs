@@ -96,8 +96,12 @@ internal static partial class SchemaOrgJobPostingParser
         else if (value.ValueKind == JsonValueKind.Array)
         {
             foreach (var item in value.EnumerateArray())
-            foreach (var text in EnumerateText(item))
-                yield return text;
+            {
+                foreach (var text in EnumerateText(item))
+                {
+                    yield return text;
+                }
+            }
         }
     }
 
@@ -123,8 +127,12 @@ internal static partial class SchemaOrgJobPostingParser
         if (value.ValueKind == JsonValueKind.Array)
         {
             foreach (var item in value.EnumerateArray())
-            foreach (var location in EnumerateLocations(item))
-                yield return location;
+            {
+                foreach (var location in EnumerateLocations(item))
+                {
+                    yield return location;
+                }
+            }
             yield break;
         }
 

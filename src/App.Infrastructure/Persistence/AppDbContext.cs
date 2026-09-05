@@ -7,6 +7,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     public DbSet<DemoSession> DemoSessions => Set<DemoSession>();
     public DbSet<JobPosting> JobPostings => Set<JobPosting>();
+    public DbSet<GmailMessageReceipt> GmailMessageReceipts => Set<GmailMessageReceipt>();
     public DbSet<ApplicationStatusHistory> ApplicationStatusHistory => Set<ApplicationStatusHistory>();
     public DbSet<CvTemplate> CvTemplates => Set<CvTemplate>();
     public DbSet<CvTemplateVersion> CvTemplateVersions => Set<CvTemplateVersion>();
@@ -35,6 +36,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 posting.ProviderKey,
                 posting.ProviderExternalId
             })
+            .IsUnique();
+        builder.Entity<GmailMessageReceipt>()
+            .HasIndex(receipt => new { receipt.WorkspaceKey, receipt.GmailMessageId })
             .IsUnique();
         builder.Entity<CvTemplateVersion>()
             .HasIndex(version => new
@@ -77,6 +81,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(posting => posting.NormalizedDataJson).HasColumnName("ParsedDataJson");
             entity.Property(posting => posting.ApplicationStatus).HasColumnName("WorkflowStatus");
         });
+        builder.Entity<GmailMessageReceipt>().ToTable("EmailMessages");
         builder.Entity<ApplicationStatusHistory>(entity =>
         {
             entity.ToTable("StatusHistory");

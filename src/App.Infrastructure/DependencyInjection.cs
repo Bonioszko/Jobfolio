@@ -39,6 +39,13 @@ public static class DependencyInjection
         services.AddScoped<IPdfArtifactService, PdfArtifactService>();
         services.AddScoped<ICvGenerationJobProcessor, CvGenerationJobProcessor>();
         services.AddScoped<ICvCompilationJobProcessor, CvCompilationJobProcessor>();
+        services.AddScoped<IGmailImportStore, GmailImportStore>();
+        services.AddScoped<IGmailMessageProcessor, GmailMessageProcessor>();
+
+        var gmailSyncSettings = GmailConfiguration.CreateSyncSettings(configuration);
+        services.AddSingleton(gmailSyncSettings);
+        services.AddSingleton<IEmailProvider>(_ => new GoogleGmailEmailProvider(
+            GmailConfiguration.CreateOAuthSettings(configuration)));
 
         services.AddSingleton(new JobPostingDetailsFetcherOptions(
             ConfigurationValues.GetPositiveInt(
