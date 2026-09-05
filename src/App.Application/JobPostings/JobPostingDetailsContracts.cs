@@ -27,3 +27,10 @@ public interface IJobPostingDetailsFetcher
         JobPostingDetailsReference reference,
         CancellationToken cancellationToken);
 }
+
+public interface IJobPostingDetailsEnricher
+{
+    Task<ParseResult> EnrichAsync(
+        ParseResult posting,
+        CancellationToken cancellationToken);
+}

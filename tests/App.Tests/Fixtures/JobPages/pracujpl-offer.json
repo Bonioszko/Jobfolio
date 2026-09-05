@@ -1,0 +1,28 @@
+{
+  "offer": {
+    "jobOfferWebId": 1000000002,
+    "attributes": {
+      "workplaces": [{ "displayAddress": "Warszawa" }],
+      "employment": {
+        "entirelyRemoteWork": true,
+        "typesOfContracts": [{
+          "name": "B2B contract",
+          "pracujPlName": "kontrakt B2B",
+          "salary": {
+            "from": 14000,
+            "to": 23000,
+            "currency": { "code": "PLN", "symbol": "zł" },
+            "timeUnit": { "shortForm": { "name": "mth.", "pracujPlName": "mies." } },
+            "salaryKind": { "name": "net (+ VAT)", "pracujPlName": "netto (+ VAT)" }
+          }
+        }]
+      }
+    },
+    "textSections": [
+      { "sectionType": "about-project", "textElements": ["Nowoczesna platforma logistyczna."] },
+      { "sectionType": "responsibilities", "textElements": ["Projektowanie usług backendowych.", "Przeglądy kodu."] },
+      { "sectionType": "requirements-expected", "textElements": ["Bardzo dobra znajomość C#."] },
+      { "sectionType": "benefits", "textElements": ["Ignored non-job benefit."] }
+    ]
+  }
+}
