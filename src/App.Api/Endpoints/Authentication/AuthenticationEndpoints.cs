@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using App.Api.Authentication;
 using App.Application;
 using App.Domain;
 using Microsoft.AspNetCore.Authentication;
@@ -13,11 +14,24 @@ public static class AuthenticationEndpoints
     {
         endpoints.MapPost("/api/auth/demo", CreateDemoAsync)
             .RequireRateLimiting("demo-session");
+        endpoints.MapGet("/api/auth/google", StartGoogleSignIn);
         endpoints.MapPost("/api/auth/logout", (Delegate)LogoutAsync)
             .RequireAuthorization();
         endpoints.MapGet("/api/me", GetCurrentSession)
             .RequireAuthorization();
         return endpoints;
+    }
+
+    private static IResult StartGoogleSignIn(GoogleAuthenticationSettings settings)
+    {
+        if (!settings.Enabled)
+        {
+            return Results.Redirect(settings.FrontendRedirect("not-configured"));
+        }
+
+        return Results.Challenge(
+            new AuthenticationProperties { RedirectUri = settings.FrontendUrl.AbsoluteUri },
+            [GoogleAuthentication.Scheme]);
     }
 
     private static async Task<IResult> CreateDemoAsync(
@@ -58,6 +72,7 @@ public static class AuthenticationEndpoints
         Results.Ok(new
         {
             userId = user.FindFirstValue(ClaimTypes.NameIdentifier),
+            email = user.FindFirstValue(ClaimTypes.Email),
             mode = user.FindFirstValue("mode")
         });
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../../../lib/api/httpClient";
 import { getErrorMessage } from "../../../lib/errors/getErrorMessage";
-import { getSession } from "../api/sessionApi";
+import { getSession, logout as logoutRequest } from "../api/sessionApi";
 import type { Session } from "../types/session";
 
 type SessionStatus = "checking" | "authenticated" | "anonymous";
@@ -10,6 +10,7 @@ export function useSession() {
   const [status, setStatus] = useState<SessionStatus>("checking");
   const [session, setSession] = useState<Session>();
   const [error, setError] = useState<string>();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -39,5 +40,19 @@ export function useSession() {
     setStatus("authenticated");
   }, []);
 
-  return { status, session, error, authenticate };
+  const logout = useCallback(async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutRequest();
+      setSession(undefined);
+      setError(undefined);
+      setStatus("anonymous");
+    } catch (requestError: unknown) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, []);
+
+  return { status, session, error, authenticate, isLoggingOut, logout };
 }

@@ -11,6 +11,7 @@
     <Project Path="src/App.Parsers/App.Parsers.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/App.Api.Tests/App.Api.Tests.csproj" />
     <Project Path="tests/App.Tests/App.Tests.csproj" />
   </Folder>
 </Solution>

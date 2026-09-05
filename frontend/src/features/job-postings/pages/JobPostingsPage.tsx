@@ -9,17 +9,28 @@ import { JobPostingsList } from "../components/JobPostingsList";
 import { useJobPostings } from "../hooks/useJobPostings";
 
 type JobPostingsPageProps = {
+  authenticationError?: string;
   domain: DomainConfig;
+  googleSignInUrl: string;
+  isLoggingOut: boolean;
+  onLogout: () => Promise<void>;
   session?: Session;
 };
 
-export function JobPostingsPage({ domain, session }: JobPostingsPageProps) {
+export function JobPostingsPage({
+  authenticationError,
+  domain,
+  googleSignInUrl,
+  isLoggingOut,
+  onLogout,
+  session,
+}: JobPostingsPageProps) {
   const [selectedPostingId, setSelectedPostingId] = useState<string>();
   const postings = useJobPostings();
   const templates = useCvTemplates();
   const rules = useCandidateRules();
 
-  const error = postings.error ?? templates.error ?? rules.error;
+  const error = postings.error ?? templates.error ?? rules.error ?? authenticationError;
   const sessionLabel = session?.mode.toLowerCase() === "demo" ? "Demo session" : "Workspace";
   const selectedPosting = postings.data.find((posting) => posting.id === selectedPostingId);
 
@@ -46,6 +57,17 @@ export function JobPostingsPage({ domain, session }: JobPostingsPageProps) {
         <div className="workspace-meta">
           <span>{postings.data.length} opportunities</span>
           <span className="workspace-badge">{sessionLabel}</span>
+          {session?.mode.toLowerCase() === "demo" ? (
+            <a className="workspace-auth-link" href={googleSignInUrl}>Sign in</a>
+          ) : (
+            <button
+              className="workspace-auth-link"
+              disabled={isLoggingOut}
+              onClick={() => void onLogout()}
+            >
+              {isLoggingOut ? "Signing out…" : "Sign out"}
+            </button>
+          )}
         </div>
       </header>
       <ErrorMessage className="banner" message={error} />

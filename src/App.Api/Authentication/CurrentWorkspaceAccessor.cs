@@ -30,12 +30,17 @@ public sealed class CurrentWorkspaceAccessor(IHttpContextAccessor httpContextAcc
             return new CurrentWorkspace($"demo:{parsedSessionId}", UserMode.Demo);
         }
 
-        var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrWhiteSpace(userId))
+        if (!string.Equals(mode, nameof(UserMode.Real), StringComparison.OrdinalIgnoreCase))
         {
-            throw new UnauthorizedAccessException("The user identifier claim is missing.");
+            throw new UnauthorizedAccessException("The user mode claim is invalid.");
         }
 
-        return new CurrentWorkspace($"user:{userId}", UserMode.Real);
+        var workspaceId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(workspaceId))
+        {
+            throw new UnauthorizedAccessException("The workspace identifier claim is missing.");
+        }
+
+        return new CurrentWorkspace($"user:{workspaceId}", UserMode.Real);
     }
 }

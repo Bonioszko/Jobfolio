@@ -2,11 +2,12 @@ import { ErrorMessage } from "../../../components/common/ErrorMessage";
 
 type DemoLandingProps = {
   error?: string;
+  googleSignInUrl: string;
   isStarting: boolean;
   onStartDemo: () => Promise<void>;
 };
 
-export function DemoLanding({ error, isStarting, onStartDemo }: DemoLandingProps) {
+export function DemoLanding({ error, googleSignInUrl, isStarting, onStartDemo }: DemoLandingProps) {
   return (
     <main className="landing">
       <div>
@@ -16,10 +17,13 @@ export function DemoLanding({ error, isStarting, onStartDemo }: DemoLandingProps
           Parse job posts from multiple email providers, track every opportunity, and tailor a
           versioned CV for the role.
         </p>
-        <button disabled={isStarting} onClick={() => void onStartDemo()}>
-          {isStarting ? "Starting demo…" : "Try Demo"}
-        </button>
-        <small>No account required · isolated for 6 hours</small>
+        <div className="landing-actions">
+          <a className="google-sign-in" href={googleSignInUrl}>Sign in with Google</a>
+          <button disabled={isStarting} onClick={() => void onStartDemo()}>
+            {isStarting ? "Starting demo…" : "Try Demo"}
+          </button>
+        </div>
+        <small>Google sign-in is limited to approved accounts · demo sessions last 6 hours</small>
         <ErrorMessage message={error} />
       </div>
     </main>

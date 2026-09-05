@@ -17,7 +17,7 @@ Use user secrets rather than committing account-specific values:
 
 ```powershell
 dotnet user-secrets --project src/App.GmailSync set "Gmail:Enabled" "true"
-dotnet user-secrets --project src/App.GmailSync set "Gmail:WorkspaceKey" "user:YOUR_GOOGLE_SUBJECT_ID"
+dotnet user-secrets --project src/App.GmailSync set "Gmail:WorkspaceKey" "user:YOUR_WORKSPACE_ID"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:Labels:0" "Job alerts"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:OAuth:ClientSecretsPath" "C:\secure\gmail-oauth-client.json"
 ```
@@ -46,7 +46,9 @@ Other settings:
 }
 ```
 
-The workspace key must be the same `user:<Google subject ID>` used by the authenticated API session. Demo workspaces are rejected.
+The workspace key must use the same `user:<workspace ID>` configured for that email under
+`Authentication:Google:AllowedUsers` in the API. For example, an API `WorkspaceId` of
+`user-one` owns Gmail data under `user:user-one`. Demo workspaces are rejected.
 
 ## Processing behavior
 

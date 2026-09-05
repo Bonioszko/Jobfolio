@@ -11,10 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLocalInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentWorkspaceAccessor, CurrentWorkspaceAccessor>();
+var googleAuthentication = GoogleAuthenticationSettings.FromConfiguration(builder.Configuration);
+builder.Services.AddSingleton(googleAuthentication);
 builder.Services.AddProblemDetails();
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services
+var authentication = builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -29,8 +31,9 @@ builder.Services
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return Task.CompletedTask;
         };
-        options.Events.OnValidatePrincipal = DemoCookieValidator.ValidateAsync;
+        options.Events.OnValidatePrincipal = SessionCookieValidator.ValidateAsync;
     });
+authentication.AddGoogleOpenIdConnect(googleAuthentication);
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options => options.AddPolicy("demo-session", context =>
     RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ =>
