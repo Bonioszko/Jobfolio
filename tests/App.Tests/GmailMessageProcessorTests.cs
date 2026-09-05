@@ -26,6 +26,32 @@ public sealed class GmailMessageProcessorTests
     }
 
     [Fact]
+    public async Task Processor_saves_every_posting_when_one_page_cannot_be_enriched()
+    {
+        var enrichable = CreateParseResult("enrichable", description: null);
+        var unavailable = CreateParseResult("unavailable", description: null);
+        var store = new RecordingStore();
+        var enricher = new JobPostingDetailsEnricher([
+            new SelectiveFetcher("linkedin", "enrichable", "Full website description")
+        ]);
+        var processor = new GmailMessageProcessor(
+            new FixedRegistry(new StubParser(enrichable, unavailable)),
+            enricher,
+            store);
+
+        var outcome = await processor.ProcessAsync(
+            "user:owner",
+            CreateEmail(),
+            CancellationToken.None);
+
+        Assert.Equal(GmailMessageProcessingOutcome.Imported, outcome);
+        Assert.Equal("IMPORTED", store.Status);
+        Assert.Equal(2, store.Postings.Count);
+        Assert.Equal("Full website description", store.Postings[0].ParsedData["description"]);
+        Assert.Null(store.Postings[1].ParsedData["description"]);
+    }
+
+    [Fact]
     public async Task Processor_records_unsupported_messages_without_persisting_raw_content()
     {
         var store = new RecordingStore();
@@ -70,11 +96,18 @@ public sealed class GmailMessageProcessorTests
         "sensitive email body",
         DateTimeOffset.UtcNow);
 
-    private static ParseResult CreateParseResult(string? description) => new(
+    private static ParseResult CreateParseResult(string? description) =>
+        CreateParseResult("123", description);
+
+    private static ParseResult CreateParseResult(string externalId, string? description) => new(
         "linkedin",
-        "123",
+        externalId,
         "Developer",
-        new() { ["url"] = "https://www.linkedin.com/jobs/view/123", ["description"] = description },
+        new()
+        {
+            ["url"] = $"https://www.linkedin.com/jobs/view/{externalId}",
+            ["description"] = description
+        },
         new());
 
     private sealed class FixedRegistry(ISourceParser? parser) : ISourceParserRegistry
@@ -84,7 +117,7 @@ public sealed class GmailMessageProcessorTests
             : new(ParserMatch.Matched, parser);
     }
 
-    private sealed class StubParser(ParseResult result) : ISourceParser
+    private sealed class StubParser(params ParseResult[] results) : ISourceParser
     {
         public int ParseCalls { get; private set; }
         public string Key => "linkedin";
@@ -96,8 +129,24 @@ public sealed class GmailMessageProcessorTests
             CancellationToken cancellationToken)
         {
             ParseCalls++;
-            return Task.FromResult<IReadOnlyList<ParseResult>>([result]);
+            return Task.FromResult<IReadOnlyList<ParseResult>>(results);
         }
+    }
+
+    private sealed class SelectiveFetcher(
+        string sourceKey,
+        string enrichableExternalId,
+        string description) : IJobPostingDetailsFetcher
+    {
+        public string SourceKey => sourceKey;
+
+        public Task<JobPostingDetails> FetchAsync(
+            JobPostingDetailsReference reference,
+            CancellationToken cancellationToken) =>
+            reference.SourceExternalId == enrichableExternalId
+                ? Task.FromResult(new JobPostingDetails(description, null, null, null))
+                : Task.FromException<JobPostingDetails>(
+                    new FormatException("The provider page does not contain job details."));
     }
 
     private sealed class StubEnricher(string description) : IJobPostingDetailsEnricher

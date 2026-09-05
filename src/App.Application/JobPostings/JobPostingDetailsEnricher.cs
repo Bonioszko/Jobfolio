@@ -30,10 +30,22 @@ public sealed class JobPostingDetailsEnricher(IEnumerable<IJobPostingDetailsFetc
                 new JobPostingDetailsReference(posting.SourceKey, posting.SourceExternalId, url),
                 cancellationToken);
         }
-        catch (HttpRequestException) when (GetExistingDescription(posting) is not null)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            // Some providers restrict anonymous page requests. Keep the deterministic
-            // description excerpt already contained in their alert email.
+            return posting;
+        }
+        catch (HttpRequestException)
+        {
+            return posting;
+        }
+        catch (IOException)
+        {
+            return posting;
+        }
+        catch (FormatException)
+        {
+            // Provider pages are best-effort enrichment. Keep the deterministic email
+            // fields, including a missing description, when page details are unavailable.
             return posting;
         }
 
@@ -49,12 +61,6 @@ public sealed class JobPostingDetailsEnricher(IEnumerable<IJobPostingDetailsFetc
 
         return posting with { ParsedData = parsedData, SearchData = searchData };
     }
-
-    private static string? GetExistingDescription(ParseResult posting) =>
-        posting.ParsedData.TryGetValue("description", out var value) &&
-        value is string description && !string.IsNullOrWhiteSpace(description)
-            ? description
-            : null;
 
     private static void Merge(Dictionary<string, object?> target, string key, string? value)
     {

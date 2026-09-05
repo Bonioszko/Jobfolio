@@ -22,7 +22,7 @@ public sealed class JobPostingDetailsEnricherTests
     }
 
     [Fact]
-    public async Task Enricher_keeps_email_description_when_provider_blocks_the_page_request()
+    public async Task Enricher_keeps_email_fields_when_provider_blocks_the_page_request()
     {
         var posting = CreatePosting("indeed", "Description supplied by the Indeed alert.");
         var enricher = new JobPostingDetailsEnricher([
@@ -33,6 +33,21 @@ public sealed class JobPostingDetailsEnricherTests
 
         Assert.Same(posting, enriched);
         Assert.Equal("Description supplied by the Indeed alert.", enriched.ParsedData["description"]);
+    }
+
+    [Fact]
+    public async Task Enricher_keeps_posting_without_description_when_provider_page_is_not_parseable()
+    {
+        var posting = CreatePosting("linkedin", description: null);
+        var enricher = new JobPostingDetailsEnricher([
+            new StubFetcher("linkedin", new FormatException("No structured job data."))
+        ]);
+
+        var enriched = await enricher.EnrichAsync(posting, CancellationToken.None);
+
+        Assert.Same(posting, enriched);
+        Assert.Null(enriched.ParsedData["description"]);
+        Assert.Equal("Warszawa", enriched.ParsedData["location"]);
     }
 
     private static ParseResult CreatePosting(string sourceKey, string? description) => new(

@@ -55,7 +55,12 @@ For each selected message, the worker:
 1. downloads the full MIME message,
 2. extracts bounded HTML and plain-text bodies,
 3. selects exactly one deterministic provider parser,
-4. fetches the provider job-page details,
+4. attempts to fetch each provider job page independently,
 5. saves normalized postings and a Gmail message receipt in one EF Core save operation.
 
 The `(workspace, Gmail message ID)` receipt and `(workspace, provider, provider external ID)` posting constraints make repeated polling idempotent. Unsupported and ambiguous messages are recorded without storing their complete email bodies. Failed messages are not marked complete and can be retried on a later poll.
+
+Job-page enrichment is best effort. If one page is unavailable, times out, or no longer
+contains recognizable job details, its posting is still imported from the deterministic
+email fields and may have a null description. Other postings from the same alert continue
+to be enriched. A later manual import can fill the missing details.
