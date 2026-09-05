@@ -1,4 +1,5 @@
 namespace App.Parsers.Sources;
+
 public sealed class JustJoinItJobParser : DelimitedJobEmailParser
 {
     public override string Key => "justjoin.it";

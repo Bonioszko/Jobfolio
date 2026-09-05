@@ -1,4 +1,5 @@
 namespace App.Parsers.Sources;
+
 public sealed class NoFluffJobsParser : DelimitedJobEmailParser
 {
     public override string Key => "nofluffjobs";
