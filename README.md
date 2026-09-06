@@ -29,6 +29,10 @@ npm run dev
 
 Open `http://localhost:5173`. The Vite development proxy targets the API's HTTP launch profile at `http://localhost:5121`.
 
+Real-user CV tailoring uses the locally installed Codex CLI in non-interactive mode and reuses its saved authentication. Verify it is available with `codex --version` and sign in with `codex login` when needed. The AI worker invokes Codex ephemerally in a read-only sandbox and requests schema-constrained TeX output. Public demo sessions continue to use the deterministic fake generator and never invoke Codex.
+
+The worker configuration supports `CodexCli:ExecutablePath`, an optional `CodexCli:Model`, `CodexCli:TimeoutSeconds`, and `CodexCli:MaxOutputCharacters`. `CvWorkflow:RealUserGenerator` selects the persisted provider for newly requested real-user jobs; its current value is `local-codex`.
+
 ## Verify
 
 ```powershell
@@ -40,6 +44,6 @@ Tectonic must be installed on the compiler worker's `PATH`; compilation is delib
 
 ## Current scope
 
-Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, three base CV templates, immutable template/rule/job/document models, deterministic CV tailoring, TeX validation/compiler, and private local artifact storage.
+Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, three base CV templates, immutable template/rule/job/document models, local Codex CV tailoring for real users, deterministic demo tailoring, TeX validation/compiler, and private local artifact storage.
 
-Next phases: template/rule API, generation and compiler worker job orchestration, React dashboard, Google OIDC/Gmail adapters, OpenAI provider, production GCP/Terraform.
+Next phases include an OpenAI Responses API tailoring provider and production GCP/Terraform.

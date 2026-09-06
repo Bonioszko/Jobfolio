@@ -18,8 +18,10 @@ public static class CvGenerationEndpoints
         ICvGenerationService cvGeneration,
         CancellationToken cancellationToken)
     {
+        var workspace = workspaceAccessor.GetRequired();
         var result = await cvGeneration.RequestAsync(
-            workspaceAccessor.GetRequired().Key,
+            workspace.Key,
+            workspace.Mode,
             new RequestCvGeneration(
                 body.SourceItemId,
                 body.TemplateVersionId,

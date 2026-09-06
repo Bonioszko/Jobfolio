@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddSingleton<IDomainConfigurationProvider, FileDomainConfigurationProvider>();
         services.AddSingleton<ISystemRulesProvider, FileSystemRulesProvider>();
         services.AddSingleton(CvWorkflowSettingsFactory.Create(configuration));
+        services.AddSingleton(CodexCliOptions.FromConfiguration(configuration));
 
         services.AddScoped<IDemoSessionService, DemoSessionService>();
         services.AddScoped<IApplicationDatabaseInitializer, ApplicationDatabaseInitializer>();
@@ -72,7 +73,10 @@ public static class DependencyInjection
         services.AddSingleton<ISourceParser, IndeedJobParser>();
         services.AddSingleton<ISourceParser, PracujPlJobParser>();
         services.AddSingleton<ISourceParserRegistry, SourceParserRegistry>();
+        services.AddSingleton<ICodexCliClient, CodexCliClient>();
         services.AddSingleton<IAiCvGenerator, DemoCvGenerator>();
+        services.AddSingleton<IAiCvGenerator, CodexCliCvGenerator>();
+        services.AddSingleton<IAiCvGeneratorResolver, CvGeneratorResolver>();
         services.AddSingleton<ITexSafetyValidator>(_ => new TexSafetyValidator(
             ConfigurationValues.GetPositiveInt(
                 configuration,

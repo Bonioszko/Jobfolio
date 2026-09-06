@@ -11,6 +11,7 @@ public sealed class CvGenerationService(
 {
     public async Task<RequestCvGenerationResult> RequestAsync(
         string workspaceKey,
+        UserMode userMode,
         RequestCvGeneration request,
         CancellationToken cancellationToken)
     {
@@ -50,7 +51,9 @@ public sealed class CvGenerationService(
             CandidateRuleVersionId = request.CandidateRuleVersionId,
             JobPostingSnapshotJson = snapshot,
             SystemRulesHash = systemRules.GenerationRulesHash,
-            Model = settings.GeneratorModel,
+            Model = userMode == UserMode.Demo
+                ? CvGeneratorNames.Demo
+                : settings.RealUserGenerator,
             UserInstruction = request.Instruction
         };
 

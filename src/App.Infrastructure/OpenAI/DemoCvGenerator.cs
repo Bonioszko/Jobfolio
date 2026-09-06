@@ -6,6 +6,8 @@ namespace App.Infrastructure;
 
 public sealed class DemoCvGenerator : IAiCvGenerator
 {
+    public string Name => CvGeneratorNames.Demo;
+
     public Task<AiCvGenerationResult> GenerateAsync(
         AiCvGenerationRequest request,
         CancellationToken cancellationToken)

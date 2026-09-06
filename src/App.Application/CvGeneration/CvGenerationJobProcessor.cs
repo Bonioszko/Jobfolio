@@ -2,12 +2,14 @@ namespace App.Application;
 
 public sealed class CvGenerationJobProcessor(
     ICvGenerationStore store,
-    IAiCvGenerator generator,
+    IAiCvGeneratorResolver generatorResolver,
     ISystemRulesProvider systemRules,
     ITexSafetyValidator texSafety,
     TimeProvider timeProvider) : ICvGenerationJobProcessor
 {
-    private static readonly TimeSpan LeaseDuration = TimeSpan.FromMinutes(2);
+    // Keep the lease longer than the local Codex timeout so another worker cannot
+    // reclaim the same generation while the CLI process is still active.
+    private static readonly TimeSpan LeaseDuration = TimeSpan.FromMinutes(10);
 
     public async Task<bool> ProcessNextAsync(CancellationToken cancellationToken)
     {
@@ -29,6 +31,7 @@ public sealed class CvGenerationJobProcessor(
             }
 
             var inputs = await store.GetProcessingInputsAsync(job, cancellationToken);
+            var generator = generatorResolver.Resolve(job.Model);
             var result = await generator.GenerateAsync(
                 new AiCvGenerationRequest(
                     systemRules.GenerationRulesMarkdown,

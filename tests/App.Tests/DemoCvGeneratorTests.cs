@@ -25,6 +25,7 @@ public sealed class DemoCvGeneratorTests
             CancellationToken.None);
 
         Assert.Equal("DEMO_GENERATOR", result.Origin);
+        Assert.Equal(CvGeneratorNames.Demo, new DemoCvGenerator().Name);
         Assert.Contains("Senior .NET Engineer", result.Tex);
         Assert.Contains("Northstar \\& Co", result.Tex);
         Assert.Contains("PostgreSQL", result.Tex);

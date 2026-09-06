@@ -7,7 +7,7 @@ public sealed record CvWorkflowSettings(
     int MaxCompilationJobsPerWorkspace,
     int MaxUserInstructionCharacters,
     int MaxCustomJobDescriptionCharacters,
-    string GeneratorModel);
+    string RealUserGenerator);
 
 public sealed record RequestCvGeneration(
     Guid JobPostingId,
@@ -31,6 +31,7 @@ public interface ICvGenerationService
 {
     Task<RequestCvGenerationResult> RequestAsync(
         string workspaceKey,
+        UserMode userMode,
         RequestCvGeneration request,
         CancellationToken cancellationToken);
 
@@ -51,9 +52,16 @@ public sealed record AiCvGenerationResult(string Tex, string Origin);
 
 public interface IAiCvGenerator
 {
+    string Name { get; }
+
     Task<AiCvGenerationResult> GenerateAsync(
         AiCvGenerationRequest request,
         CancellationToken cancellationToken);
+}
+
+public interface IAiCvGeneratorResolver
+{
+    IAiCvGenerator Resolve(string name);
 }
 
 public interface ICvGenerationQueue

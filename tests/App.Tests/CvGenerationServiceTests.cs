@@ -34,6 +34,7 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             workspace,
+            UserMode.Demo,
             new RequestCvGeneration(
                 posting.Id,
                 template.Id,
@@ -48,6 +49,7 @@ public sealed class CvGenerationServiceTests
         Assert.True(queue.JobExistedWhenEnqueued);
         var persisted = await db.CvGenerationJobs.SingleAsync();
         Assert.Equal("rules-hash", persisted.SystemRulesHash);
+        Assert.Equal(CvGeneratorNames.Demo, persisted.Model);
         Assert.DoesNotContain("demoEmailHtml", persisted.JobPostingSnapshotJson);
         Assert.Contains(
             "\"customJobDescription\":\"Custom role requirements\"",
@@ -66,6 +68,7 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             "demo:current",
+            UserMode.Demo,
             new RequestCvGeneration(posting.Id, Guid.NewGuid(), Guid.NewGuid(), null, null),
             CancellationToken.None);
 
@@ -106,6 +109,7 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             workspace,
+            UserMode.Demo,
             new RequestCvGeneration(posting.Id, template.Id, rules.Id, null, null),
             CancellationToken.None);
 
@@ -123,6 +127,7 @@ public sealed class CvGenerationServiceTests
 
         var result = await service.RequestAsync(
             "demo:limit",
+            UserMode.Demo,
             new RequestCvGeneration(
                 Guid.NewGuid(),
                 Guid.NewGuid(),
@@ -134,6 +139,42 @@ public sealed class CvGenerationServiceTests
         Assert.Equal(RequestCvGenerationOutcome.InvalidInput, result.Outcome);
         Assert.Null(queue.EnqueuedJobId);
         Assert.Empty(db.CvGenerationJobs);
+    }
+
+    [Fact]
+    public async Task Selects_configured_generator_for_real_user()
+    {
+        await using var db = CreateDbContext();
+        const string workspace = "user:real";
+        var posting = CreatePosting(workspace);
+        var template = new CvTemplateVersion
+        {
+            WorkspaceKey = workspace,
+            CvTemplateId = Guid.NewGuid(),
+            Version = 1,
+            Tex = "template"
+        };
+        var rules = new CandidateRuleVersion
+        {
+            WorkspaceKey = workspace,
+            CandidateRuleDocumentId = Guid.NewGuid(),
+            Version = 1,
+            Markdown = "rules"
+        };
+        db.AddRange(posting, template, rules);
+        await db.SaveChangesAsync();
+        var service = CreateService(db, new InspectingGenerationQueue(db));
+
+        var result = await service.RequestAsync(
+            workspace,
+            UserMode.Real,
+            new RequestCvGeneration(posting.Id, template.Id, rules.Id, null, null),
+            CancellationToken.None);
+
+        Assert.Equal(RequestCvGenerationOutcome.Accepted, result.Outcome);
+        Assert.Equal(
+            "test-model",
+            (await db.CvGenerationJobs.SingleAsync()).Model);
     }
 
     private static CvGenerationService CreateService(

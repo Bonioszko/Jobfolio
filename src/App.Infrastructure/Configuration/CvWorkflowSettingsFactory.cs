@@ -24,11 +24,11 @@ internal static class CvWorkflowSettingsFactory
                 configuration,
                 "CvWorkflow:MaxCustomJobDescriptionCharacters",
                 20_000),
-            configuration["CvWorkflow:GeneratorModel"] ?? "demo-deterministic-v1");
+            configuration["CvWorkflow:RealUserGenerator"] ?? CvGeneratorNames.LocalCodex);
 
-        if (string.IsNullOrWhiteSpace(settings.GeneratorModel))
+        if (string.IsNullOrWhiteSpace(settings.RealUserGenerator))
         {
-            throw new InvalidOperationException("The CV generator model must be configured.");
+            throw new InvalidOperationException("The real-user CV generator must be configured.");
         }
 
         return settings;
