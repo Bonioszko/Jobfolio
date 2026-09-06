@@ -72,7 +72,8 @@ namespace App.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("WorkspaceKey");
+                    b.HasIndex("WorkspaceKey")
+                        .IsUnique();
 
                     b.ToTable("UserRuleDocuments", (string)null);
                 });

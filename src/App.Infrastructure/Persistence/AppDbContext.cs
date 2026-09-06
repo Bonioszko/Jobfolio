@@ -56,6 +56,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 version.Version
             })
             .IsUnique();
+        builder.Entity<CandidateRuleDocument>()
+            .HasIndex(document => document.WorkspaceKey)
+            .IsUnique();
         builder.Entity<GeneratedCvVersion>()
             .HasIndex(version => new
             {

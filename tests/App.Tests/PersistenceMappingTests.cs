@@ -24,6 +24,11 @@ public sealed class PersistenceMappingTests
             nameof(CvTemplateVersion.CvTemplateId),
             "TemplateId");
         AssertMapping<CandidateRuleDocument>(db, "UserRuleDocuments");
+        var candidateRules = db.Model.FindEntityType(typeof(CandidateRuleDocument));
+        var workspaceIndex = candidateRules?.FindIndex(
+            candidateRules.FindProperty(nameof(CandidateRuleDocument.WorkspaceKey))!);
+        Assert.NotNull(workspaceIndex);
+        Assert.True(workspaceIndex.IsUnique);
         AssertMapping<CandidateRuleVersion>(
             db,
             "UserRuleVersions",
