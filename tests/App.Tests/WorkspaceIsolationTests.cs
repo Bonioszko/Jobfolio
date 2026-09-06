@@ -16,9 +16,15 @@ public sealed class WorkspaceIsolationTests
         await db.SaveChangesAsync();
         var service = new JobPostingQueryService(db);
 
-        var result = await service.ListAsync("demo:a", null, null, 50, CancellationToken.None);
+        var result = await service.ListAsync(
+            "demo:a",
+            null,
+            null,
+            null,
+            50,
+            CancellationToken.None);
 
-        var item = Assert.Single(result);
+        var item = Assert.Single(result.Items);
         Assert.Equal("Visible", item.DisplayTitle);
     }
 

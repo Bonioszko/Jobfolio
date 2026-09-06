@@ -7,10 +7,11 @@ namespace App.Infrastructure;
 
 public sealed class JobPostingQueryService(AppDbContext db) : IJobPostingQueryService
 {
-    public async Task<IReadOnlyList<JobPostingView>> ListAsync(
+    public async Task<JobPostingPage> ListAsync(
         string workspaceKey,
         string? status,
         string? source,
+        JobPostingCursor? cursor,
         int limit,
         CancellationToken cancellationToken)
     {
@@ -28,13 +29,37 @@ public sealed class JobPostingQueryService(AppDbContext db) : IJobPostingQuerySe
             query = query.Where(item => item.ProviderKey == source);
         }
 
+        if (cursor is not null)
+        {
+            query = db.Database.IsNpgsql()
+                ? query.Where(item => EF.Functions.LessThan(
+                    ValueTuple.Create(item.SourceReceivedAt, item.Id),
+                    ValueTuple.Create(cursor.SourceReceivedAt, cursor.Id)))
+                : query.Where(item =>
+                    item.SourceReceivedAt < cursor.SourceReceivedAt ||
+                    (item.SourceReceivedAt == cursor.SourceReceivedAt &&
+                     item.Id.CompareTo(cursor.Id) < 0));
+        }
+
+        var pageSize = Math.Clamp(limit, 1, 100);
         var items = await query
             .OrderByDescending(item => item.SourceReceivedAt)
             .ThenByDescending(item => item.Id)
-            .Take(Math.Clamp(limit, 1, 100))
+            .Take(pageSize + 1)
             .ToListAsync(cancellationToken);
 
-        return items.Select(item => Map(item, includeEmail: false)).ToArray();
+        var hasMore = items.Count > pageSize;
+        if (hasMore)
+        {
+            items.RemoveAt(items.Count - 1);
+        }
+
+        var nextCursor = hasMore
+            ? new JobPostingCursor(items[^1].SourceReceivedAt, items[^1].Id)
+            : null;
+        return new JobPostingPage(
+            items.Select(item => Map(item, includeEmail: false)).ToArray(),
+            nextCursor);
     }
 
     public async Task<JobPostingView?> GetAsync(

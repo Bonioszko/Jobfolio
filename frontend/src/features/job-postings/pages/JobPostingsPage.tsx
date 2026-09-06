@@ -77,6 +77,9 @@ export function JobPostingsPage({
         ) : (
           <JobPostingsList
             activeId={selectedPostingId}
+            hasMore={postings.hasMore}
+            isLoadingMore={postings.isLoadingMore}
+            onLoadMore={postings.loadMore}
             onSelect={setSelectedPostingId}
             postings={postings.data}
             statuses={domain.statuses}

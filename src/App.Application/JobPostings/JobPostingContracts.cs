@@ -12,12 +12,19 @@ public sealed record JobPostingView(
     DateTimeOffset SourceReceivedAt,
     string? DemoEmailHtml);
 
+public sealed record JobPostingCursor(DateTimeOffset SourceReceivedAt, Guid Id);
+
+public sealed record JobPostingPage(
+    IReadOnlyList<JobPostingView> Items,
+    JobPostingCursor? NextCursor);
+
 public interface IJobPostingQueryService
 {
-    Task<IReadOnlyList<JobPostingView>> ListAsync(
+    Task<JobPostingPage> ListAsync(
         string workspaceKey,
         string? status,
         string? source,
+        JobPostingCursor? cursor,
         int limit,
         CancellationToken cancellationToken);
 

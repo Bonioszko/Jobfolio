@@ -18,17 +18,35 @@ public static class JobPostingEndpoints
         IJobPostingQueryService jobPostings,
         string? status,
         string? source,
+        string? cursor,
         int? limit,
         CancellationToken cancellationToken)
     {
+        JobPostingCursor? parsedCursor = null;
+        if (!string.IsNullOrWhiteSpace(cursor))
+        {
+            if (!JobPostingCursorCodec.TryDecode(cursor, out var decodedCursor))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["cursor"] = ["The pagination cursor is invalid."]
+                });
+            }
+
+            parsedCursor = decodedCursor;
+        }
+
         var workspace = workspaceAccessor.GetRequired();
-        var result = await jobPostings.ListAsync(
+        var page = await jobPostings.ListAsync(
             workspace.Key,
             status,
             source,
+            parsedCursor,
             limit ?? 50,
             cancellationToken);
-        return Results.Ok(result);
+        return Results.Ok(new JobPostingPageResponse(
+            page.Items,
+            page.NextCursor is null ? null : JobPostingCursorCodec.Encode(page.NextCursor)));
     }
 
     private static async Task<IResult> GetAsync(
@@ -71,4 +89,8 @@ public static class JobPostingEndpoints
     }
 
     private sealed record ChangeStatusRequest(string Status);
+
+    private sealed record JobPostingPageResponse(
+        IReadOnlyList<JobPostingView> Items,
+        string? NextCursor);
 }

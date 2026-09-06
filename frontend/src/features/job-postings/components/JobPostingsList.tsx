@@ -6,15 +6,21 @@ import { statusTone } from "../utils/statusPresentation";
 
 type JobPostingsListProps = {
   activeId?: string;
+  hasMore: boolean;
+  isLoadingMore: boolean;
   postings: JobPosting[];
   statuses: WorkflowStatus[];
+  onLoadMore: () => Promise<void>;
   onSelect: (id: string) => void;
 };
 
 export function JobPostingsList({
   activeId,
+  hasMore,
+  isLoadingMore,
   postings,
   statuses,
+  onLoadMore,
   onSelect,
 }: JobPostingsListProps) {
   const [query, setQuery] = useState("");
@@ -123,6 +129,17 @@ export function JobPostingsList({
           })}
         </ol>
       )}
+      {hasMore ? (
+        <div className="job-pagination">
+          <button
+            disabled={isLoadingMore}
+            onClick={() => void onLoadMore()}
+            type="button"
+          >
+            {isLoadingMore ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

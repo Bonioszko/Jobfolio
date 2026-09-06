@@ -270,6 +270,7 @@ summary:focus-visible {
 }
 
 .job-list {
+  flex: 1;
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -278,6 +279,28 @@ summary:focus-visible {
   list-style: none;
   scrollbar-color: #c6cbc5 transparent;
   scrollbar-width: thin;
+}
+
+.job-pagination {
+  padding: 12px 18px;
+  background: #f7f8f5;
+  border-top: 1px solid var(--line);
+}
+
+.job-pagination button {
+  width: 100%;
+  padding: 10px 14px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.job-pagination button:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: #aeb5af;
 }
 
 .job-list li {

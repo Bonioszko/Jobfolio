@@ -9,3 +9,8 @@ export type JobPosting = {
   sourceReceivedAt: string;
   demoEmailHtml?: string;
 };
+
+export type JobPostingPage = {
+  items: JobPosting[];
+  nextCursor: string | null;
+};
