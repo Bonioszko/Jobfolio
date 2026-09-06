@@ -1,5 +1,12 @@
+import { useEffect } from "react";
 import type { WorkflowStatus } from "../../domain-config/types/domainConfig";
+import { matchesUnmodifiedShortcut } from "../utils/keyboardShortcut";
 import { statusTone } from "../utils/statusPresentation";
+
+const statusShortcuts: Readonly<Record<string, string>> = {
+  TO_APPLY: "T",
+  SKIP: "S",
+};
 
 type JobStatusActionsProps = {
   currentStatus: string;
@@ -14,6 +21,26 @@ export function JobStatusActions({
   statuses,
   onChange,
 }: JobStatusActionsProps) {
+  useEffect(() => {
+    const changeStatus = (event: KeyboardEvent) => {
+      const shortcut = Object.values(statusShortcuts).find((key) =>
+        matchesUnmodifiedShortcut(event, key));
+      if (!shortcut || isUpdating) return;
+
+      const statusCode = Object.entries(statusShortcuts).find(
+        ([, key]) => key === shortcut,
+      )?.[0];
+      const targetStatus = statuses.find((status) => status.code === statusCode);
+      if (!targetStatus || targetStatus.code === currentStatus) return;
+
+      event.preventDefault();
+      void onChange(targetStatus.code);
+    };
+
+    window.addEventListener("keydown", changeStatus);
+    return () => window.removeEventListener("keydown", changeStatus);
+  }, [currentStatus, isUpdating, onChange, statuses]);
+
   return (
     <section className="status-section" aria-labelledby="status-heading">
       <div className="section-heading-row">
@@ -26,9 +53,11 @@ export function JobStatusActions({
       <div className="status-actions">
         {statuses.map((status) => {
           const isCurrent = status.code === currentStatus;
+          const shortcut = statusShortcuts[status.code];
 
           return (
             <button
+              aria-keyshortcuts={shortcut}
               aria-pressed={isCurrent}
               className="status-action"
               data-tone={statusTone(status.code)}
@@ -39,6 +68,7 @@ export function JobStatusActions({
             >
               <span className="status-action__dot" aria-hidden="true" />
               {status.label}
+              {shortcut && <kbd className="shortcut-key">{shortcut}</kbd>}
             </button>
           );
         })}

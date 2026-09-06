@@ -1,10 +1,17 @@
 import { useEffect, useRef } from "react";
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
 import { CvTailoringPanel } from "../../cv-generation/components/CvTailoringPanel";
-import type { CvTemplate, SaveCvTemplateInput } from "../../cv-templates/types/cvTemplate";
-import type { DomainField, WorkflowStatus } from "../../domain-config/types/domainConfig";
+import type {
+  CvTemplate,
+  SaveCvTemplateInput,
+} from "../../cv-templates/types/cvTemplate";
+import type {
+  DomainField,
+  WorkflowStatus,
+} from "../../domain-config/types/domainConfig";
 import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
+import { matchesUnmodifiedShortcut } from "../utils/keyboardShortcut";
 import { JobStatusActions } from "./JobStatusActions";
 
 type JobPostingDetailsProps = {
@@ -14,7 +21,9 @@ type JobPostingDetailsProps = {
   isTailoringDataLoading: boolean;
   isTemplateSaving: boolean;
   onStatusChange: (status: string) => Promise<void>;
-  onTemplateSave: (input: SaveCvTemplateInput) => Promise<CvTemplate | undefined>;
+  onTemplateSave: (
+    input: SaveCvTemplateInput,
+  ) => Promise<CvTemplate | undefined>;
   posting: JobPosting;
   rules?: CandidateRules;
   statuses: WorkflowStatus[];
@@ -43,25 +52,17 @@ export function JobPostingDetails({
   );
   const company = displayValue(posting.parsedData.company);
   const location = displayValue(posting.parsedData.location);
-  const originalPostingUrl = typeof posting.parsedData.url === "string" &&
-    posting.parsedData.url.trim()
-    ? posting.parsedData.url
-    : undefined;
+  const originalPostingUrl =
+    typeof posting.parsedData.url === "string" && posting.parsedData.url.trim()
+      ? posting.parsedData.url
+      : undefined;
   const originalPostingLink = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     if (!originalPostingUrl) return;
 
     const openOriginalPosting = (event: KeyboardEvent) => {
-      if (
-        event.defaultPrevented ||
-        event.repeat ||
-        event.ctrlKey ||
-        event.altKey ||
-        event.metaKey ||
-        event.key.toLowerCase() !== "v" ||
-        isEditableTarget(event.target)
-      ) {
+      if (!matchesUnmodifiedShortcut(event, "w")) {
         return;
       }
 
@@ -79,7 +80,7 @@ export function JobPostingDetails({
         <div className="detail-hero__topline">
           {originalPostingUrl && (
             <a
-              aria-keyshortcuts="V"
+              aria-keyshortcuts="W"
               className="external-link"
               href={originalPostingUrl}
               ref={originalPostingLink}
@@ -87,7 +88,7 @@ export function JobPostingDetails({
               target="_blank"
             >
               <span>View original posting</span>
-              <kbd>V</kbd>
+              <kbd className="shortcut-key">W</kbd>
               <span aria-hidden="true">↗</span>
             </a>
           )}
@@ -117,7 +118,9 @@ export function JobPostingDetails({
       <section className="detail-section" aria-labelledby="overview-heading">
         <span className="section-kicker">ROLE OVERVIEW</span>
         <h3 id="overview-heading">What they are looking for</h3>
-        <p className="job-description">{displayValue(posting.parsedData.description)}</p>
+        <p className="job-description">
+          {displayValue(posting.parsedData.description)}
+        </p>
       </section>
 
       {detailFields.length > 0 && (
@@ -130,7 +133,9 @@ export function JobPostingDetails({
           ))}
           <div>
             <dt>Parser</dt>
-            <dd>{posting.parserKey} · v{posting.parserVersion}</dd>
+            <dd>
+              {posting.parserKey} · v{posting.parserVersion}
+            </dd>
           </div>
         </dl>
       )}
@@ -160,9 +165,4 @@ export function JobPostingDetails({
       />
     </div>
   );
-}
-
-function isEditableTarget(target: EventTarget | null) {
-  return target instanceof HTMLElement &&
-    (target.isContentEditable || ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName));
 }

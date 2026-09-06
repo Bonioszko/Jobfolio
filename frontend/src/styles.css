@@ -560,7 +560,7 @@ summary:focus-visible {
   border-color: #becaff;
 }
 
-.external-link kbd {
+.shortcut-key {
   min-width: 20px;
   padding: 2px 5px;
   color: var(--ink-soft);
@@ -572,6 +572,11 @@ summary:focus-visible {
   font-size: 10px;
   line-height: 1.2;
   text-align: center;
+}
+
+.status-action .shortcut-key {
+  margin-left: 3px;
+  background: var(--surface-subtle);
 }
 
 .status-section,
