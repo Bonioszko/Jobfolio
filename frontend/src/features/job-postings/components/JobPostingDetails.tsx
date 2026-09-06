@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
 import { CvTailoringPanel } from "../../cv-generation/components/CvTailoringPanel";
 import type { CvTemplate, SaveCvTemplateInput } from "../../cv-templates/types/cvTemplate";
@@ -42,16 +43,61 @@ export function JobPostingDetails({
   );
   const company = displayValue(posting.parsedData.company);
   const location = displayValue(posting.parsedData.location);
+  const originalPostingUrl = typeof posting.parsedData.url === "string" &&
+    posting.parsedData.url.trim()
+    ? posting.parsedData.url
+    : undefined;
+  const originalPostingLink = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!originalPostingUrl) return;
+
+    const openOriginalPosting = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.metaKey ||
+        event.key.toLowerCase() !== "v" ||
+        isEditableTarget(event.target)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      originalPostingLink.current?.click();
+    };
+
+    window.addEventListener("keydown", openOriginalPosting);
+    return () => window.removeEventListener("keydown", openOriginalPosting);
+  }, [originalPostingUrl]);
 
   return (
     <div className="job-detail">
       <div className="detail-hero">
-        <div className="detail-hero__meta">
-          <span>{posting.sourceKey}</span>
-          <span aria-hidden="true">·</span>
-          <time dateTime={posting.sourceReceivedAt}>
-            Received {new Date(posting.sourceReceivedAt).toLocaleDateString()}
-          </time>
+        <div className="detail-hero__topline">
+          {originalPostingUrl && (
+            <a
+              aria-keyshortcuts="V"
+              className="external-link"
+              href={originalPostingUrl}
+              ref={originalPostingLink}
+              rel="noreferrer"
+              target="_blank"
+            >
+              <span>View original posting</span>
+              <kbd>V</kbd>
+              <span aria-hidden="true">↗</span>
+            </a>
+          )}
+          <div className="detail-hero__meta">
+            <span>{posting.sourceKey}</span>
+            <span aria-hidden="true">·</span>
+            <time dateTime={posting.sourceReceivedAt}>
+              Received {new Date(posting.sourceReceivedAt).toLocaleDateString()}
+            </time>
+          </div>
         </div>
         <h1>{posting.displayTitle}</h1>
         <p className="detail-company">
@@ -59,11 +105,6 @@ export function JobPostingDetails({
           <span aria-hidden="true">·</span>
           <span>{location}</span>
         </p>
-        {typeof posting.parsedData.url === "string" && (
-          <a className="external-link" href={posting.parsedData.url} target="_blank" rel="noreferrer">
-            View original posting <span aria-hidden="true">↗</span>
-          </a>
-        )}
       </div>
 
       <JobStatusActions
@@ -119,4 +160,9 @@ export function JobPostingDetails({
       />
     </div>
   );
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement &&
+    (target.isContentEditable || ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName));
 }

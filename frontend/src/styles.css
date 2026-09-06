@@ -503,9 +503,11 @@ summary:focus-visible {
   padding: 46px clamp(28px, 5vw, 72px) 70px;
 }
 
-.detail-hero {
-  position: relative;
-  padding-right: 180px;
+.detail-hero__topline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
 }
 
 .detail-hero__meta {
@@ -540,18 +542,36 @@ summary:focus-visible {
 }
 
 .external-link {
-  position: absolute;
-  top: 0;
-  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
   color: var(--accent-dark);
+  background: var(--accent-soft);
+  border: 1px solid #d5ddff;
+  border-radius: 5px;
   font-size: 12px;
   font-weight: 750;
   text-decoration: none;
 }
 
 .external-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  background: #e2e8ff;
+  border-color: #becaff;
+}
+
+.external-link kbd {
+  min-width: 20px;
+  padding: 2px 5px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .status-section,
@@ -1082,16 +1102,6 @@ summary:focus-visible {
 
   .job-detail {
     padding: 34px 25px 50px;
-  }
-
-  .detail-hero {
-    padding-right: 0;
-  }
-
-  .external-link {
-    position: static;
-    display: inline-block;
-    margin-top: 16px;
   }
 }
 
