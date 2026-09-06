@@ -48,6 +48,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 version.Version
             })
             .IsUnique();
+        builder.Entity<CvTemplate>()
+            .HasIndex(template => new { template.WorkspaceKey, template.Name })
+            .IsUnique();
         builder.Entity<CandidateRuleVersion>()
             .HasIndex(version => new
             {

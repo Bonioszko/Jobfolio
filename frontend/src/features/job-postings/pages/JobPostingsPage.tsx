@@ -40,7 +40,11 @@ export function JobPostingsPage({
     if (postings.data.length === 0) {
       setSelectedPostingId(undefined);
     } else if (!postings.data.some((posting) => posting.id === selectedPostingId)) {
-      setSelectedPostingId(postings.data[0].id);
+      setSelectedPostingId(
+        postings.data.find((posting) => posting.workflowStatus === "NEW")?.id ??
+          postings.data.find((posting) => posting.workflowStatus === "TO_APPLY")?.id ??
+          postings.data[0].id,
+      );
     }
   }, [postings.data, postings.isLoading, selectedPostingId]);
 
@@ -77,9 +81,6 @@ export function JobPostingsPage({
         ) : (
           <JobPostingsList
             activeId={selectedPostingId}
-            hasMore={postings.hasMore}
-            isLoadingMore={postings.isLoadingMore}
-            onLoadMore={postings.loadMore}
             onSelect={setSelectedPostingId}
             postings={postings.data}
             statuses={domain.statuses}
@@ -92,14 +93,17 @@ export function JobPostingsPage({
             selectedPostingId && postings.updatingIds.has(selectedPostingId)
           )}
           isTailoringDataLoading={templates.isLoading || rules.isLoading}
+          isTemplateSaving={templates.isSaving}
           onStatusChange={(status) =>
             selectedPostingId ? postings.changeStatus(selectedPostingId, status) : Promise.resolve()
           }
+          onTemplateSave={templates.saveTemplate}
           postingId={selectedPostingId}
           rules={rules.data}
           sourceItemName={domain.sourceItem.singular}
           statuses={domain.statuses}
           templates={templates.data}
+          templateSaveError={templates.saveError}
           workflowStatus={selectedPosting?.workflowStatus}
         />
       </section>

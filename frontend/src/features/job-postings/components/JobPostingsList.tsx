@@ -6,21 +6,15 @@ import { statusTone } from "../utils/statusPresentation";
 
 type JobPostingsListProps = {
   activeId?: string;
-  hasMore: boolean;
-  isLoadingMore: boolean;
   postings: JobPosting[];
   statuses: WorkflowStatus[];
-  onLoadMore: () => Promise<void>;
   onSelect: (id: string) => void;
 };
 
 export function JobPostingsList({
   activeId,
-  hasMore,
-  isLoadingMore,
   postings,
   statuses,
-  onLoadMore,
   onSelect,
 }: JobPostingsListProps) {
   const [query, setQuery] = useState("");
@@ -44,6 +38,31 @@ export function JobPostingsList({
       return searchableText.includes(normalizedQuery);
     });
   }, [postings, query, status]);
+  const groups = useMemo(() => {
+    if (status !== "ALL") {
+      return [{ key: "filtered", label: "", postings: visiblePostings }];
+    }
+
+    return [
+      {
+        key: "new",
+        label: "New jobs",
+        postings: visiblePostings.filter((posting) => posting.workflowStatus === "NEW"),
+      },
+      {
+        key: "to-apply",
+        label: "To apply",
+        postings: visiblePostings.filter((posting) => posting.workflowStatus === "TO_APPLY"),
+      },
+      {
+        key: "other",
+        label: "Other jobs",
+        postings: visiblePostings.filter(
+          (posting) => !["NEW", "TO_APPLY"].includes(posting.workflowStatus),
+        ),
+      },
+    ];
+  }, [status, visiblePostings]);
 
   return (
     <section className="jobs-index" aria-label="Job postings">
@@ -94,11 +113,23 @@ export function JobPostingsList({
         </div>
       ) : (
         <ol className="job-list">
-          {visiblePostings.map((posting) => {
+          {groups.flatMap((group, groupIndex) => {
+            const groupItems: React.ReactNode[] = [];
+
+            if (group.label) {
+              groupItems.push(
+                <li className="job-group-heading" key={`${group.key}-heading`}>
+                  <span>{group.label}</span>
+                  <span>{group.postings.length}</span>
+                </li>,
+              );
+            }
+
+            for (const posting of group.postings) {
             const company = displayValue(posting.parsedData.company);
             const location = displayValue(posting.parsedData.location);
 
-            return (
+              groupItems.push(
               <li key={posting.id}>
                 <button
                   className="job-list-item"
@@ -124,22 +155,26 @@ export function JobPostingsList({
                     </time>
                   </span>
                 </button>
-              </li>
-            );
+                </li>,
+              );
+            }
+
+            if (status === "ALL" && groupIndex === 0) {
+              groupItems.push(
+                <li className="new-jobs-boundary" key="new-jobs-boundary">
+                  <span aria-hidden="true">✓</span>
+                  <span>
+                    <strong>End of new jobs</strong>
+                    <small>You’re caught up. Saved opportunities follow.</small>
+                  </span>
+                </li>,
+              );
+            }
+
+            return groupItems;
           })}
         </ol>
       )}
-      {hasMore ? (
-        <div className="job-pagination">
-          <button
-            disabled={isLoadingMore}
-            onClick={() => void onLoadMore()}
-            type="button"
-          >
-            {isLoadingMore ? "Loading…" : "Load more"}
-          </button>
-        </div>
-      ) : null}
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { ErrorMessage } from "../../../components/common/ErrorMessage";
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
-import type { CvTemplate } from "../../cv-templates/types/cvTemplate";
+import type { CvTemplate, SaveCvTemplateInput } from "../../cv-templates/types/cvTemplate";
 import type { DomainField, WorkflowStatus } from "../../domain-config/types/domainConfig";
 import { useJobPosting } from "../hooks/useJobPosting";
 import { JobPostingDetails } from "./JobPostingDetails";
@@ -10,12 +10,15 @@ type JobPostingDetailsPanelProps = {
   fields: DomainField[];
   isStatusUpdating: boolean;
   isTailoringDataLoading: boolean;
+  isTemplateSaving: boolean;
   onStatusChange: (status: string) => Promise<void>;
+  onTemplateSave: (input: SaveCvTemplateInput) => Promise<CvTemplate | undefined>;
   postingId?: string;
   rules?: CandidateRules;
   sourceItemName: string;
   statuses: WorkflowStatus[];
   templates: CvTemplate[];
+  templateSaveError?: string;
   workflowStatus?: string;
 };
 
@@ -24,12 +27,15 @@ export function JobPostingDetailsPanel({
   fields,
   isStatusUpdating,
   isTailoringDataLoading,
+  isTemplateSaving,
   onStatusChange,
+  onTemplateSave,
   postingId,
   rules,
   sourceItemName,
   statuses,
   templates,
+  templateSaveError,
   workflowStatus,
 }: JobPostingDetailsPanelProps) {
   const posting = useJobPosting(postingId);
@@ -58,11 +64,14 @@ export function JobPostingDetailsPanel({
           fields={fields}
           isStatusUpdating={isStatusUpdating}
           isTailoringDataLoading={isTailoringDataLoading}
+          isTemplateSaving={isTemplateSaving}
           onStatusChange={onStatusChange}
+          onTemplateSave={onTemplateSave}
           posting={posting.data}
           rules={rules}
           statuses={statuses}
           templates={templates}
+          templateSaveError={templateSaveError}
           workflowStatus={workflowStatus ?? posting.data.workflowStatus}
         />
       )}

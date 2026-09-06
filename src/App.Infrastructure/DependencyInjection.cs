@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IApplicationStatusService, ApplicationStatusService>();
         services.AddScoped<IApplicationStatusStore, ApplicationStatusStore>();
         services.AddScoped<ICvTemplateQueryService, CvTemplateQueryService>();
+        services.AddScoped<ICvTemplateCommandService, CvTemplateCommandService>();
         services.AddScoped<ICandidateRuleQueryService, CandidateRuleQueryService>();
         services.AddScoped<ICvGenerationService, CvGenerationService>();
         services.AddScoped<ICvGenerationStore, CvGenerationStore>();

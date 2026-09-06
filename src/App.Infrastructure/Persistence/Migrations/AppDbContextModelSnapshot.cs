@@ -250,6 +250,9 @@ namespace App.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("WorkspaceKey");
 
+                    b.HasIndex("WorkspaceKey", "Name")
+                        .IsUnique();
+
                     b.ToTable("DocumentTemplates", (string)null);
                 });
 

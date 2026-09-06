@@ -1,6 +1,6 @@
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
 import { CvTailoringPanel } from "../../cv-generation/components/CvTailoringPanel";
-import type { CvTemplate } from "../../cv-templates/types/cvTemplate";
+import type { CvTemplate, SaveCvTemplateInput } from "../../cv-templates/types/cvTemplate";
 import type { DomainField, WorkflowStatus } from "../../domain-config/types/domainConfig";
 import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
@@ -11,11 +11,14 @@ type JobPostingDetailsProps = {
   fields: DomainField[];
   isStatusUpdating: boolean;
   isTailoringDataLoading: boolean;
+  isTemplateSaving: boolean;
   onStatusChange: (status: string) => Promise<void>;
+  onTemplateSave: (input: SaveCvTemplateInput) => Promise<CvTemplate | undefined>;
   posting: JobPosting;
   rules?: CandidateRules;
   statuses: WorkflowStatus[];
   templates: CvTemplate[];
+  templateSaveError?: string;
   workflowStatus: string;
 };
 
@@ -24,11 +27,14 @@ export function JobPostingDetails({
   fields,
   isStatusUpdating,
   isTailoringDataLoading,
+  isTemplateSaving,
   onStatusChange,
+  onTemplateSave,
   posting,
   rules,
   statuses,
   templates,
+  templateSaveError,
   workflowStatus,
 }: JobPostingDetailsProps) {
   const detailFields = fields.filter(
@@ -104,8 +110,11 @@ export function JobPostingDetails({
       <CvTailoringPanel
         documentName={documentName}
         isLoadingResources={isTailoringDataLoading}
+        isTemplateSaving={isTemplateSaving}
         jobPostingId={posting.id}
+        onTemplateSave={onTemplateSave}
         rules={rules}
+        templateSaveError={templateSaveError}
         templates={templates}
       />
     </div>

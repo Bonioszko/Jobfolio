@@ -5,3 +5,9 @@ export type CvTemplate = {
   versionId: string;
   tex: string;
 };
+
+export type SaveCvTemplateInput = {
+  id?: string;
+  name: string;
+  tex: string;
+};

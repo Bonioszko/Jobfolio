@@ -1,23 +1,30 @@
 import { useEffect, useState } from "react";
 import { ErrorMessage } from "../../../components/common/ErrorMessage";
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
-import type { CvTemplate } from "../../cv-templates/types/cvTemplate";
+import { CvTemplateEditor } from "../../cv-templates/components/CvTemplateEditor";
+import type { CvTemplate, SaveCvTemplateInput } from "../../cv-templates/types/cvTemplate";
 import { GeneratedCvResult } from "../../generated-cvs/components/GeneratedCvResult";
 import { useCvGeneration } from "../hooks/useCvGeneration";
 
 type CvTailoringPanelProps = {
   documentName: string;
   isLoadingResources: boolean;
+  isTemplateSaving: boolean;
   jobPostingId: string;
+  onTemplateSave: (input: SaveCvTemplateInput) => Promise<CvTemplate | undefined>;
   rules?: CandidateRules;
+  templateSaveError?: string;
   templates: CvTemplate[];
 };
 
 export function CvTailoringPanel({
   documentName,
   isLoadingResources,
+  isTemplateSaving,
   jobPostingId,
+  onTemplateSave,
   rules,
+  templateSaveError,
   templates,
 }: CvTailoringPanelProps) {
   const [templateVersionId, setTemplateVersionId] = useState(templates[0]?.versionId ?? "");
@@ -75,6 +82,14 @@ export function CvTailoringPanel({
             ))}
           </select>
         </label>
+
+        <CvTemplateEditor
+          error={templateSaveError}
+          isSaving={isTemplateSaving}
+          onSave={onTemplateSave}
+          onSaved={(template) => setTemplateVersionId(template.versionId)}
+          templates={templates}
+        />
 
         <label className="form-field">
           <span className="field-label-row">
