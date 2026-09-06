@@ -21,12 +21,18 @@ export function JobPostingsList({
 }: JobPostingsListProps) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ALL");
+  const [source, setSource] = useState("ALL");
   const statusLabels = new Map(statuses.map((item) => [item.code, item.label]));
+  const sources = useMemo(
+    () => [...new Set(postings.map((posting) => posting.sourceKey))].sort(),
+    [postings],
+  );
   const visiblePostings = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
 
     return postings.filter((posting) => {
       if (status !== "ALL" && posting.workflowStatus !== status) return false;
+      if (source !== "ALL" && posting.sourceKey !== source) return false;
       if (!normalizedQuery) return true;
 
       const searchableText = [
@@ -39,7 +45,7 @@ export function JobPostingsList({
 
       return searchableText.includes(normalizedQuery);
     });
-  }, [postings, query, status]);
+  }, [postings, query, source, status]);
   const groups = useMemo(() => {
     if (status !== "ALL") {
       return [{ key: "filtered", label: "", postings: visiblePostings }];
@@ -109,6 +115,17 @@ export function JobPostingsList({
             ))}
           </select>
         </label>
+        <label className="filter-field">
+          <span className="visually-hidden">Filter by source</span>
+          <select value={source} onChange={(event) => setSource(event.target.value)}>
+            <option value="ALL">All sources</option>
+            {sources.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {postings.length === 0 ? (
@@ -119,7 +136,7 @@ export function JobPostingsList({
       ) : visiblePostings.length === 0 ? (
         <div className="index-empty">
           <strong>No matching jobs</strong>
-          <span>Try a different search or state.</span>
+          <span>Try a different search, state, or source.</span>
         </div>
       ) : (
         <ol className="job-list">

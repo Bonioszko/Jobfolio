@@ -9,6 +9,7 @@ import type {
   DomainField,
   WorkflowStatus,
 } from "../../domain-config/types/domainConfig";
+import { InterviewNotesPanel } from "../../interview-notes/components/InterviewNotesPanel";
 import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
 import { matchesUnmodifiedShortcut } from "../utils/keyboardShortcut";
@@ -114,6 +115,8 @@ export function JobPostingDetails({
         onChange={onStatusChange}
         statuses={statuses}
       />
+
+      <InterviewNotesPanel jobPostingId={posting.id} />
 
       <section className="detail-section" aria-labelledby="overview-heading">
         <span className="section-kicker">ROLE OVERVIEW</span>

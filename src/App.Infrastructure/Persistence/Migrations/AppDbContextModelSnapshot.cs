@@ -412,6 +412,44 @@ namespace App.Infrastructure.Persistence.Migrations
                     b.ToTable("EmailMessages", (string)null);
                 });
 
+            modelBuilder.Entity("App.Domain.InterviewNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("InterviewDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("JobPostingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("WorkspaceKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceKey");
+
+                    b.HasIndex("WorkspaceKey", "JobPostingId", "InterviewDate");
+
+                    b.ToTable("InterviewNotes", (string)null);
+                });
+
             modelBuilder.Entity("App.Domain.JobPosting", b =>
                 {
                     b.Property<Guid>("Id")

@@ -7,6 +7,7 @@ using App.Api.Endpoints.CvGeneration;
 using App.Api.Endpoints.CvTemplates;
 using App.Api.Endpoints.GeneratedCvs;
 using App.Api.Endpoints.JobPostings;
+using App.Api.Endpoints.InterviewNotes;
 
 namespace App.Api.Endpoints;
 
@@ -20,6 +21,7 @@ public static class EndpointRouteBuilderExtensions
 
         var authenticated = endpoints.MapGroup("/api").RequireAuthorization();
         authenticated.MapJobPostingEndpoints();
+        authenticated.MapInterviewNoteEndpoints();
         authenticated.MapCvTemplateEndpoints();
         authenticated.MapCandidateRuleEndpoints();
         authenticated.MapCvGenerationEndpoints();

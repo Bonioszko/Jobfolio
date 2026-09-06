@@ -4,7 +4,16 @@ Local-first .NET 10 and React implementation for parsing job-alert emails, track
 
 ## Start PostgreSQL
 
-```powershell
+Copy `.env.example` to `.env` before the first run. If port `5432` is already
+occupied, change both `POSTGRES_PORT` and the port in
+`ConnectionStrings__Postgres` to the same free port. Docker Compose reads the
+file automatically; export its values in each shell that runs a .NET process.
+
+```bash
+cp .env.example .env
+set -a
+source .env
+set +a
 docker compose up -d postgres
 ```
 
@@ -44,6 +53,6 @@ Tectonic must be installed on the compiler worker's `PATH`; compilation is delib
 
 ## Current scope
 
-Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, three base CV templates, immutable template/rule/job/document models, local Codex CV tailoring for real users, deterministic demo tailoring, TeX validation/compiler, and private local artifact storage.
+Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, source filtering, dated multi-stage interview notes, three base CV templates, immutable template/rule/job/document models, local Codex CV tailoring for real users, deterministic demo tailoring, TeX validation/compiler, and private local artifact storage.
 
 Next phases include an OpenAI Responses API tailoring provider and production GCP/Terraform.

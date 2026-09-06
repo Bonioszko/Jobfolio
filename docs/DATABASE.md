@@ -16,6 +16,7 @@ Expected tables include:
 demo_sessions
 job_postings
 application_status_history
+interview_notes
 cv_templates
 cv_template_versions
 candidate_rule_documents
@@ -95,6 +96,13 @@ Current application status lives with the job posting/application workflow recor
 Every status change also creates a status-history record.
 
 Status update + history insert must be atomic.
+
+## Interview notes
+
+Each interview stage is a separate workspace-owned row linked to a job posting.
+Store the stage label, interview date, notes, and creation timestamp. Multiple
+stages may belong to the same posting, and every query must scope by workspace
+and job-posting ID before returning notes.
 
 ---
 

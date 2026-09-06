@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IJobPostingQueryService, JobPostingQueryService>();
         services.AddScoped<IApplicationStatusService, ApplicationStatusService>();
         services.AddScoped<IApplicationStatusStore, ApplicationStatusStore>();
+        services.AddScoped<IInterviewNoteService, InterviewNoteService>();
         services.AddScoped<ICvTemplateQueryService, CvTemplateQueryService>();
         services.AddScoped<ICvTemplateCommandService, CvTemplateCommandService>();
         services.AddScoped<ICandidateRuleQueryService, CandidateRuleQueryService>();

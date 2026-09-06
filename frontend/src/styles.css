@@ -227,11 +227,12 @@ summary:focus-visible {
   display: grid;
   gap: 8px;
   padding: 0 18px 16px;
-  grid-template-columns: minmax(0, 1fr) 116px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .search-field {
   position: relative;
+  grid-column: 1 / -1;
 }
 
 .search-field svg {
@@ -581,6 +582,7 @@ summary:focus-visible {
 
 .status-section,
 .detail-section,
+.interview-notes-panel,
 .tailoring-panel,
 .job-facts,
 .source-disclosure {
@@ -597,6 +599,7 @@ summary:focus-visible {
 
 .status-section h3,
 .detail-section h3,
+.interview-notes-panel h3,
 .tailoring-panel h3 {
   margin: 5px 0 0;
   font-family: Georgia, "Times New Roman", serif;
@@ -659,6 +662,85 @@ summary:focus-visible {
   font-size: 17px;
   line-height: 1.72;
   white-space: pre-line;
+}
+
+.interview-note-form {
+  display: grid;
+  margin-top: 18px;
+  gap: 13px;
+}
+
+.interview-note-form__row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr);
+}
+
+.interview-note-form input,
+.interview-note-form textarea {
+  width: 100%;
+  padding: 10px 11px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+}
+
+.interview-note-form input {
+  height: 40px;
+}
+
+.interview-note-form textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.interview-note-submit {
+  justify-self: start;
+  padding: 0 16px;
+}
+
+.interview-notes-message {
+  margin: 18px 0 0;
+  font-size: 13px;
+}
+
+.interview-note-list {
+  display: grid;
+  margin: 22px 0 0;
+  padding: 0;
+  gap: 12px;
+  list-style: none;
+}
+
+.interview-note-list li {
+  padding: 15px 17px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.interview-note-list li > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.interview-note-list strong {
+  font-size: 14px;
+}
+
+.interview-note-list time {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.interview-note-list p {
+  margin: 9px 0 0;
+  color: #4d5752;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .job-facts {
@@ -1148,6 +1230,10 @@ summary:focus-visible {
   }
 
   .job-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-note-form__row {
     grid-template-columns: 1fr;
   }
 

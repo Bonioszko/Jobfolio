@@ -18,6 +18,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<GeneratedCvVersion> GeneratedCvVersions => Set<GeneratedCvVersion>();
     public DbSet<CvCompileJob> CvCompileJobs => Set<CvCompileJob>();
     public DbSet<PdfArtifact> PdfArtifacts => Set<PdfArtifact>();
+    public DbSet<InterviewNote> InterviewNotes => Set<InterviewNote>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -72,6 +73,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             .IsUnique();
         builder.Entity<CvGenerationJob>().Property(job => job.Status).HasConversion<string>();
         builder.Entity<CvCompileJob>().Property(job => job.Status).HasConversion<string>();
+        builder.Entity<InterviewNote>(entity =>
+        {
+            entity.ToTable("InterviewNotes");
+            entity.Property(note => note.Stage).HasMaxLength(100);
+            entity.Property(note => note.Notes).HasMaxLength(10_000);
+            entity.HasIndex(note => new
+            {
+                note.WorkspaceKey,
+                note.JobPostingId,
+                note.InterviewDate
+            });
+        });
     }
 
     private static void ConfigureLegacySchemaNames(ModelBuilder builder)
