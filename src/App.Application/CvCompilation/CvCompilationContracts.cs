@@ -46,6 +46,37 @@ public interface ITexSafetyValidator
     void Validate(string tex);
 }
 
+public sealed record StoredArtifact(
+    Guid Id,
+    string Key,
+    string Sha256,
+    long Size);
+
+public interface IArtifactStorage
+{
+    Task<StoredArtifact> SaveAsync(
+        string workspaceKey,
+        Guid artifactId,
+        byte[] data,
+        CancellationToken cancellationToken);
+
+    Task<Stream?> OpenReadAsync(
+        string key,
+        CancellationToken cancellationToken);
+
+    Task DeleteWorkspaceAsync(
+        string workspaceKey,
+        CancellationToken cancellationToken);
+}
+
+public interface IPdfArtifactService
+{
+    Task<Stream?> OpenReadAsync(
+        string workspaceKey,
+        Guid artifactId,
+        CancellationToken cancellationToken);
+}
+
 public interface ICvCompilationStore
 {
     Task<bool> VersionExistsAsync(

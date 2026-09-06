@@ -2,6 +2,25 @@ namespace App.Infrastructure;
 
 internal static class RepositoryFileLocator
 {
+    public static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            var gitPath = Path.Combine(directory.FullName, ".git");
+            if (Directory.Exists(gitPath) || File.Exists(gitPath))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            "The repository root could not be found. Configure Artifacts:Root with an absolute path.");
+    }
+
     public static string FindFile(params string[] segments)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

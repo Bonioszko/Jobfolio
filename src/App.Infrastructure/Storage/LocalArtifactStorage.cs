@@ -9,8 +9,12 @@ public sealed class LocalArtifactStorage : IArtifactStorage
 
     public LocalArtifactStorage(string? configuredRoot)
     {
-        _root = Path.GetFullPath(
-            configuredRoot ?? Path.Combine(AppContext.BaseDirectory, "artifacts"));
+        var root = string.IsNullOrWhiteSpace(configuredRoot)
+            ? ".artifacts"
+            : configuredRoot;
+        _root = Path.IsPathRooted(root)
+            ? Path.GetFullPath(root)
+            : Path.GetFullPath(Path.Combine(RepositoryFileLocator.FindRepositoryRoot(), root));
     }
 
     public async Task<StoredArtifact> SaveAsync(

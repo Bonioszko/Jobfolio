@@ -2,7 +2,7 @@
 **/obj/
 .appdata/
 .artifacts/
-artifacts/
+/artifacts/
 frontend/node_modules/
 frontend/dist/
 *.tsbuildinfo
