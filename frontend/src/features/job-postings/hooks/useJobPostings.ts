@@ -35,8 +35,10 @@ export function useJobPostings() {
           posting.id === id ? { ...posting, workflowStatus: status } : posting,
         ),
       );
+      return true;
     } catch (requestError) {
       setError(getErrorMessage(requestError));
+      return false;
     } finally {
       setUpdatingIds((current) => {
         const next = new Set(current);

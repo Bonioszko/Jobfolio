@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorMessage } from "../../../components/common/ErrorMessage";
 import type { Session } from "../../auth/types/session";
 import { useCandidateRules } from "../../candidate-rules/hooks/useCandidateRules";
@@ -26,6 +26,7 @@ export function JobPostingsPage({
   session,
 }: JobPostingsPageProps) {
   const [selectedPostingId, setSelectedPostingId] = useState<string>();
+  const visiblePostingIds = useRef<string[]>([]);
   const postings = useJobPostings();
   const templates = useCvTemplates();
   const rules = useCandidateRules();
@@ -47,6 +48,25 @@ export function JobPostingsPage({
       );
     }
   }, [postings.data, postings.isLoading, selectedPostingId]);
+
+  const handleVisibleOrderChange = useCallback((ids: string[]) => {
+    visiblePostingIds.current = ids;
+  }, []);
+
+  const handleStatusChange = async (status: string) => {
+    const postingId = selectedPostingId;
+    if (!postingId) return;
+
+    const currentIndex = visiblePostingIds.current.indexOf(postingId);
+    const nextPostingId = currentIndex >= 0
+      ? visiblePostingIds.current[currentIndex + 1]
+      : undefined;
+    const succeeded = await postings.changeStatus(postingId, status);
+
+    if (succeeded && nextPostingId) {
+      setSelectedPostingId((current) => current === postingId ? nextPostingId : current);
+    }
+  };
 
   return (
     <main className="app-shell">
@@ -82,6 +102,7 @@ export function JobPostingsPage({
           <JobPostingsList
             activeId={selectedPostingId}
             onSelect={setSelectedPostingId}
+            onVisibleOrderChange={handleVisibleOrderChange}
             postings={postings.data}
             statuses={domain.statuses}
           />
@@ -94,9 +115,7 @@ export function JobPostingsPage({
           )}
           isTailoringDataLoading={templates.isLoading || rules.isLoading}
           isTemplateSaving={templates.isSaving}
-          onStatusChange={(status) =>
-            selectedPostingId ? postings.changeStatus(selectedPostingId, status) : Promise.resolve()
-          }
+          onStatusChange={handleStatusChange}
           onTemplateSave={templates.saveTemplate}
           postingId={selectedPostingId}
           rules={rules.data}

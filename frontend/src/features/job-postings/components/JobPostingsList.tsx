@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { WorkflowStatus } from "../../domain-config/types/domainConfig";
 import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
@@ -9,6 +9,7 @@ type JobPostingsListProps = {
   postings: JobPosting[];
   statuses: WorkflowStatus[];
   onSelect: (id: string) => void;
+  onVisibleOrderChange: (ids: string[]) => void;
 };
 
 export function JobPostingsList({
@@ -16,6 +17,7 @@ export function JobPostingsList({
   postings,
   statuses,
   onSelect,
+  onVisibleOrderChange,
 }: JobPostingsListProps) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("ALL");
@@ -63,6 +65,14 @@ export function JobPostingsList({
       },
     ];
   }, [status, visiblePostings]);
+  const visiblePostingIds = useMemo(
+    () => groups.flatMap((group) => group.postings.map((posting) => posting.id)),
+    [groups],
+  );
+
+  useEffect(() => {
+    onVisibleOrderChange(visiblePostingIds);
+  }, [onVisibleOrderChange, visiblePostingIds]);
 
   return (
     <section className="jobs-index" aria-label="Job postings">
