@@ -27,7 +27,9 @@ public sealed class CvCompilationStore(AppDbContext db) : ICvCompilationStore
             IsolationLevel.Serializable,
             cancellationToken);
         var count = await db.CvCompileJobs.CountAsync(
-            candidate => candidate.WorkspaceKey == job.WorkspaceKey,
+            candidate => candidate.WorkspaceKey == job.WorkspaceKey &&
+                         (candidate.Status == JobStatus.Queued ||
+                          candidate.Status == JobStatus.Running),
             cancellationToken);
         if (count >= maximumJobsPerWorkspace) return false;
 

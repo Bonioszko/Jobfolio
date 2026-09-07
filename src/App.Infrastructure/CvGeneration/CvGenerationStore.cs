@@ -48,7 +48,9 @@ public sealed class CvGenerationStore(AppDbContext db) : ICvGenerationStore
             IsolationLevel.Serializable,
             cancellationToken);
         var count = await db.CvGenerationJobs.CountAsync(
-            candidate => candidate.WorkspaceKey == job.WorkspaceKey,
+            candidate => candidate.WorkspaceKey == job.WorkspaceKey &&
+                         (candidate.Status == JobStatus.Queued ||
+                          candidate.Status == JobStatus.Running),
             cancellationToken);
         if (count >= maximumJobsPerWorkspace) return false;
 
