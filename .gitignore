@@ -11,3 +11,4 @@ frontend/dist/
 **/gmail-oauth-client*.json
 *.user
 *.suo
+/transfer

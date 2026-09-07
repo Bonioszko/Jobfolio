@@ -116,15 +116,7 @@ export function JobPostingDetails({
         statuses={statuses}
       />
 
-      <InterviewNotesPanel jobPostingId={posting.id} />
 
-      <section className="detail-section" aria-labelledby="overview-heading">
-        <span className="section-kicker">ROLE OVERVIEW</span>
-        <h3 id="overview-heading">What they are looking for</h3>
-        <p className="job-description">
-          {displayValue(posting.parsedData.description)}
-        </p>
-      </section>
 
       {detailFields.length > 0 && (
         <dl className="job-facts">
@@ -155,6 +147,15 @@ export function JobPostingDetails({
           title="Parsed source email"
         />
       </details>
+
+      <section className="detail-section" aria-labelledby="overview-heading">
+        <span className="section-kicker">ROLE OVERVIEW</span>
+        <h3 id="overview-heading">What they are looking for</h3>
+        <p className="job-description">
+          {displayValue(posting.parsedData.description)}
+        </p>
+      </section>
+      <InterviewNotesPanel jobPostingId={posting.id} />
 
       <CvTailoringPanel
         documentName={documentName}
