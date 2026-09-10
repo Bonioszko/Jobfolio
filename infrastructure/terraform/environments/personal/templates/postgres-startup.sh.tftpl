@@ -1,0 +1,108 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+exec > >(logger --tag jobparser-postgres-startup) 2>&1
+
+readonly DATA_DEVICE="/dev/disk/by-id/google-jobparser-postgres-data"
+readonly DATA_MOUNT="/mnt/disks/jobparser-postgres"
+readonly POSTGRES_DATA="$DATA_MOUNT/data"
+readonly PASSWORD_FILE="/run/jobparser-postgres-password"
+readonly DOCKER_CONFIG_DIR="/var/lib/jobparser/docker-config"
+readonly CONTAINER_NAME="jobparser-postgres"
+readonly POSTGRES_IMAGE="${postgres_image}"
+readonly REGISTRY_HOST="${registry_host}"
+readonly SECRET_ACCESS_URL="https://secretmanager.googleapis.com/v1/projects/${project_id}/secrets/${postgres_secret_id}/versions/latest:access"
+readonly TOKEN_URL="http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+
+echo "Starting Job Parser PostgreSQL bootstrap"
+
+for attempt in $(seq 1 60); do
+  if [[ -e "$DATA_DEVICE" ]]; then
+    break
+  fi
+  sleep 2
+done
+
+if [[ ! -e "$DATA_DEVICE" ]]; then
+  echo "Database data disk did not appear"
+  exit 1
+fi
+
+if ! blkid "$DATA_DEVICE" >/dev/null 2>&1; then
+  mkfs.ext4 -m 0 -E lazy_itable_init=0,lazy_journal_init=0,discard "$DATA_DEVICE"
+fi
+
+mkdir -p "$DATA_MOUNT"
+if ! mountpoint --quiet "$DATA_MOUNT"; then
+  mount -o discard,defaults "$DATA_DEVICE" "$DATA_MOUNT"
+fi
+
+mkdir -p "$POSTGRES_DATA"
+chmod 700 "$POSTGRES_DATA"
+
+ACCESS_TOKEN=""
+for attempt in $(seq 1 30); do
+  token_response="$(curl --fail --silent --show-error \
+    --header 'Metadata-Flavor: Google' \
+    "$TOKEN_URL" || true)"
+  ACCESS_TOKEN="$(printf '%s' "$token_response" \
+    | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  if [[ -n "$ACCESS_TOKEN" ]]; then
+    break
+  fi
+  sleep 2
+done
+
+if [[ -z "$ACCESS_TOKEN" ]]; then
+  echo "Could not obtain a VM service-account access token"
+  exit 1
+fi
+
+secret_response="$(curl --fail --silent --show-error \
+  --header "Authorization: Bearer $ACCESS_TOKEN" \
+  "$SECRET_ACCESS_URL")"
+password_base64="$(printf '%s' "$secret_response" \
+  | sed -n 's/^[[:space:]]*"data"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+
+if [[ -z "$password_base64" ]]; then
+  echo "Secret Manager returned no password payload"
+  exit 1
+fi
+
+umask 077
+printf '%s' "$password_base64" | base64 --decode >"$PASSWORD_FILE"
+unset ACCESS_TOKEN token_response secret_response password_base64
+
+if [[ ! -s "$PASSWORD_FILE" ]]; then
+  echo "Decoded PostgreSQL password is empty"
+  exit 1
+fi
+
+mkdir -p "$DOCKER_CONFIG_DIR"
+printf '{"credHelpers":{"%s":"gcr"}}\n' "$REGISTRY_HOST" \
+  >"$DOCKER_CONFIG_DIR/config.json"
+docker --config "$DOCKER_CONFIG_DIR" pull --platform linux/amd64 "$POSTGRES_IMAGE"
+
+if docker container inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+  docker rm --force "$CONTAINER_NAME"
+fi
+
+docker run --detach \
+  --name "$CONTAINER_NAME" \
+  --platform linux/amd64 \
+  --restart unless-stopped \
+  --publish 127.0.0.1:5432:5432 \
+  --mount "type=bind,source=$POSTGRES_DATA,target=/var/lib/postgresql/data" \
+  --mount "type=bind,source=$PASSWORD_FILE,target=/run/secrets/postgres-password,readonly" \
+  --env POSTGRES_DB=jobparser \
+  --env POSTGRES_USER=jobparser \
+  --env POSTGRES_PASSWORD_FILE=/run/secrets/postgres-password \
+  --env POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 \
+  --health-cmd='pg_isready --username=jobparser --dbname=jobparser' \
+  --health-interval=10s \
+  --health-timeout=5s \
+  --health-retries=12 \
+  "$POSTGRES_IMAGE" \
+  -c password_encryption=scram-sha-256
+
+echo "Job Parser PostgreSQL container started"

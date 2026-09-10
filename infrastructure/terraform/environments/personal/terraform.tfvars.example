@@ -1,0 +1,8 @@
+project_id = "example"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+operator_email = "your-google-account@example.com"
+
+# Leave false until the PostgreSQL image has been copied to Artifact Registry.
+database_vm_enabled = false
