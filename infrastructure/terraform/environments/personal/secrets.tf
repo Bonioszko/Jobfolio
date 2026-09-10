@@ -23,3 +23,10 @@ resource "google_secret_manager_secret_iam_member" "operator_password_version_ad
   role      = "roles/secretmanager.secretVersionAdder"
   member    = "user:${var.operator_email}"
 }
+
+resource "google_secret_manager_secret_iam_member" "operator_password_accessor" {
+  project   = google_secret_manager_secret.postgres_password.project
+  secret_id = google_secret_manager_secret.postgres_password.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "user:${var.operator_email}"
+}

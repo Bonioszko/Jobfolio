@@ -124,5 +124,49 @@ Connect the application or a database client to `127.0.0.1:5433` using database
 and user `jobparser` plus the password that was added to Secret Manager. The
 tunnel uses the normal local `gcloud` SSH key and may prompt for its passphrase.
 
+The checked-in helper scripts keep the password out of shell history and local
+configuration files. From this directory, run the tunnel in one terminal:
+
+```bash
+./scripts/db-tunnel.sh
+```
+
+Run each local process through the Secret Manager wrapper in another terminal:
+
+```bash
+./scripts/with-remote-db.sh \
+  dotnet run --project ../../../../src/App.Api --launch-profile http
+```
+
+The wrapper verifies the tunnel, reads the password directly from Secret
+Manager, limits the local application's PostgreSQL pool to ten connections, and
+passes the connection string only through the child process environment. It
+does not print or persist the password.
+
+Keep the old local Docker volume stopped rather than deleting it until the
+remote database has passed the reboot and snapshot-restore checks:
+
+```bash
+docker compose --project-directory ../../../.. stop postgres
+```
+
+Pre-migration dumps are stored under the ignored `.private-backups/` directory.
+They contain private application data and must never be committed.
+
+## Step 9 migration verification
+
+The local PostgreSQL 17.11 database was migrated on YYYY-MM-DD. The source and
+destination matched across all 15 application tables before cutover. The local
+Docker volume remains stopped and available as a rollback copy. A verified
+custom-format dump is retained locally at
+`.private-backups/jobparser-local-before-cloud.dump` with mode `0600`.
+
+The VM reboot test confirmed that the data disk remounts and PostgreSQL starts
+automatically without reinitializing the database. Snapshot
+`jobparser-postgres-migration-snapshot` was restored to a temporary disk and opened
+by an isolated PostgreSQL container; the restored key table counts matched the
+primary database. The temporary disk and container were removed after the
+test.
+
 Terraform state and real `.tfvars` files are intentionally excluded from Git.
 Commit `.terraform.lock.hcl` so provider selections remain reproducible.
