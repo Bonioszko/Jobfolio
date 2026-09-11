@@ -3,12 +3,17 @@ import { getErrorMessage } from "../../../lib/errors/getErrorMessage";
 import { getCandidateRules } from "../api/candidateRulesApi";
 import type { CandidateRules } from "../types/candidateRules";
 
-export function useCandidateRules() {
+export function useCandidateRules(enabled = true) {
   const [data, setData] = useState<CandidateRules>();
   const [error, setError] = useState<string>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
+
     let isActive = true;
 
     getCandidateRules()
@@ -25,7 +30,7 @@ export function useCandidateRules() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [enabled]);
 
   return { data, error, isLoading };
 }

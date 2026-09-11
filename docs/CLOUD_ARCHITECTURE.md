@@ -8,6 +8,16 @@ Do not implement these resources prematurely during early local development.
 
 The local architecture should preserve seams that make this migration straightforward.
 
+The personal low-cost deployment deliberately ships a smaller first slice:
+
+- React and `App.Api` share one scale-to-zero Cloud Run service;
+- PostgreSQL remains on the private Free Tier Compute Engine VM;
+- `App.GmailSync` runs as scheduled, one-shot Cloud Run jobs;
+- CV generation, compilation, Cloud Tasks, and PDF object storage remain disabled.
+
+This is a deployment profile, not removal of the CV domain. The larger architecture below
+remains the target when tailored-CV functionality is enabled later.
+
 ---
 
 ## Target services

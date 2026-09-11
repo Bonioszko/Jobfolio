@@ -1,0 +1,17 @@
+.git
+.github
+**/.terraform
+**/.private-backups
+**/.appdata
+**/bin
+**/obj
+frontend/node_modules
+frontend/dist
+.env
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+**/client_secret_*.json
+**/gmail-oauth-client*.json
+transfer

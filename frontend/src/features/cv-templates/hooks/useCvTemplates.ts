@@ -3,14 +3,19 @@ import { getErrorMessage } from "../../../lib/errors/getErrorMessage";
 import { getCvTemplates, saveCvTemplate } from "../api/cvTemplatesApi";
 import type { CvTemplate, SaveCvTemplateInput } from "../types/cvTemplate";
 
-export function useCvTemplates() {
+export function useCvTemplates(enabled = true) {
   const [data, setData] = useState<CvTemplate[]>([]);
   const [error, setError] = useState<string>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>();
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
+
     let isActive = true;
 
     getCvTemplates()
@@ -27,7 +32,7 @@ export function useCvTemplates() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [enabled]);
 
   const saveTemplate = async (input: SaveCvTemplateInput) => {
     setSaveError(undefined);

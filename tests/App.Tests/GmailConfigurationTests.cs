@@ -13,6 +13,7 @@ public sealed class GmailConfigurationTests
         var settings = GmailConfiguration.CreateSyncSettings(configuration);
 
         Assert.False(settings.Enabled);
+        Assert.False(settings.RunOnce);
         Assert.Empty(settings.Labels);
     }
 
@@ -22,6 +23,7 @@ public sealed class GmailConfigurationTests
         var missingWorkspace = BuildConfiguration(new Dictionary<string, string?>
         {
             ["Gmail:Enabled"] = "true",
+            ["Gmail:RunOnce"] = "true",
             ["Gmail:Labels:0"] = "Job alerts"
         });
         var missingLabels = BuildConfiguration(new Dictionary<string, string?>
@@ -43,6 +45,7 @@ public sealed class GmailConfigurationTests
         {
             ["Gmail:Enabled"] = "true",
             ["Gmail:WorkspaceKey"] = "user:owner",
+            ["Gmail:RunOnce"] = "true",
             ["Gmail:Labels:0"] = "Job alerts",
             ["Gmail:Labels:1"] = "job alerts",
             ["Gmail:PollIntervalSeconds"] = "90",
@@ -52,9 +55,40 @@ public sealed class GmailConfigurationTests
         var settings = GmailConfiguration.CreateSyncSettings(configuration);
 
         Assert.True(settings.Enabled);
+        Assert.True(settings.RunOnce);
         Assert.Equal("Job alerts", Assert.Single(settings.Labels));
         Assert.Equal(TimeSpan.FromSeconds(90), settings.PollInterval);
         Assert.Equal(25, settings.MaxMessagesPerRun);
+    }
+
+    [Fact]
+    public void Cloud_oauth_requires_a_complete_credential_set()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Gmail:OAuth:ClientId"] = "client.apps.googleusercontent.com",
+            ["Gmail:OAuth:ClientSecret"] = "secret"
+        });
+
+        Assert.Throws<InvalidOperationException>(() =>
+            GmailConfiguration.CreateOAuthSettings(configuration));
+    }
+
+    [Fact]
+    public void Cloud_oauth_accepts_client_credentials_and_refresh_token()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Gmail:OAuth:ClientId"] = "client.apps.googleusercontent.com",
+            ["Gmail:OAuth:ClientSecret"] = "secret",
+            ["Gmail:OAuth:RefreshToken"] = "refresh-token"
+        });
+
+        var settings = GmailConfiguration.CreateOAuthSettings(configuration);
+
+        Assert.True(settings.UsesRefreshToken);
+        Assert.Null(settings.ClientSecretsPath);
+        Assert.Equal("refresh-token", settings.RefreshToken);
     }
 
     private static IConfiguration BuildConfiguration(Dictionary<string, string?> values) =>

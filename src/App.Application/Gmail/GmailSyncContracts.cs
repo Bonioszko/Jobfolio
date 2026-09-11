@@ -2,6 +2,7 @@ namespace App.Application;
 
 public sealed record GmailSyncSettings(
     bool Enabled,
+    bool RunOnce,
     string WorkspaceKey,
     IReadOnlyList<string> Labels,
     TimeSpan PollInterval,

@@ -28,8 +28,8 @@ export function JobPostingsPage({
   const [selectedPostingId, setSelectedPostingId] = useState<string>();
   const visiblePostingIds = useRef<string[]>([]);
   const postings = useJobPostings();
-  const templates = useCvTemplates();
-  const rules = useCandidateRules();
+  const templates = useCvTemplates(domain.features.cv);
+  const rules = useCandidateRules(domain.features.cv);
 
   const error = postings.error ?? templates.error ?? rules.error ?? authenticationError;
   const sessionLabel = session?.mode.toLowerCase() === "demo" ? "Demo session" : "Workspace";
@@ -108,6 +108,7 @@ export function JobPostingsPage({
           />
         )}
         <JobPostingDetailsPanel
+          cvEnabled={domain.features.cv}
           documentName={domain.generatedDocument.singular}
           fields={domain.fields}
           isStatusUpdating={Boolean(

@@ -2,17 +2,24 @@ using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
 using App.Api;
 using App.Api.Authentication;
+using App.Api.Configuration;
 using App.Api.Endpoints;
 using App.Application;
 using App.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLocalInfrastructure(builder.Configuration);
+builder.Services.AddDataProtection()
+    .PersistKeysToDbContext<AppDbContext>()
+    .SetApplicationName("JobParser");
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentWorkspaceAccessor, CurrentWorkspaceAccessor>();
 var googleAuthentication = GoogleAuthenticationSettings.FromConfiguration(builder.Configuration);
 builder.Services.AddSingleton(googleAuthentication);
+var applicationFeatures = ApplicationFeatures.FromConfiguration(builder.Configuration);
+builder.Services.AddSingleton(applicationFeatures);
 builder.Services.AddProblemDetails();
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -53,14 +60,23 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .AllowCredentials()));
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
+if (builder.Configuration.GetValue<bool?>("Database:InitializeOnStartup") ?? app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
     await scope.ServiceProvider
         .GetRequiredService<IApplicationDatabaseInitializer>()
         .InitializeAsync(CancellationToken.None);
+}
 app.UseExceptionHandler();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseCors();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapApplicationEndpoints();
+app.MapApplicationEndpoints(applicationFeatures);
+if (app.Environment.WebRootFileProvider.GetFileInfo("index.html").Exists)
+{
+    app.MapFallbackToFile("index.html");
+}
 app.Run();

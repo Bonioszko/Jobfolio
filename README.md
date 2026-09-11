@@ -55,4 +55,7 @@ Tectonic must be installed on the compiler worker's `PATH`; compilation is delib
 
 Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, source filtering, dated multi-stage interview notes, three base CV templates, immutable template/rule/job/document models, local Codex CV tailoring for real users, deterministic demo tailoring, TeX validation/compiler, and private local artifact storage.
 
-Next phases include an OpenAI Responses API tailoring provider and production GCP/Terraform.
+The personal GCP profile runs the frontend and API in one scale-to-zero Cloud Run service,
+keeps PostgreSQL on the internal-only Free Tier VM, and runs Gmail imports as scheduled Cloud
+Run jobs. CV endpoints and UI can be disabled through `Features:CvEnabled`; the personal cloud
+profile keeps them disabled until the OpenAI and compiler deployment is implemented.

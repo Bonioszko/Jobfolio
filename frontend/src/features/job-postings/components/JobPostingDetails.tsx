@@ -16,6 +16,7 @@ import { matchesUnmodifiedShortcut } from "../utils/keyboardShortcut";
 import { JobStatusActions } from "./JobStatusActions";
 
 type JobPostingDetailsProps = {
+  cvEnabled: boolean;
   documentName: string;
   fields: DomainField[];
   isStatusUpdating: boolean;
@@ -34,6 +35,7 @@ type JobPostingDetailsProps = {
 };
 
 export function JobPostingDetails({
+  cvEnabled,
   documentName,
   fields,
   isStatusUpdating,
@@ -157,16 +159,18 @@ export function JobPostingDetails({
       </section>
       <InterviewNotesPanel jobPostingId={posting.id} />
 
-      <CvTailoringPanel
-        documentName={documentName}
-        isLoadingResources={isTailoringDataLoading}
-        isTemplateSaving={isTemplateSaving}
-        jobPostingId={posting.id}
-        onTemplateSave={onTemplateSave}
-        rules={rules}
-        templateSaveError={templateSaveError}
-        templates={templates}
-      />
+      {cvEnabled && (
+        <CvTailoringPanel
+          documentName={documentName}
+          isLoadingResources={isTailoringDataLoading}
+          isTemplateSaving={isTemplateSaving}
+          jobPostingId={posting.id}
+          onTemplateSave={onTemplateSave}
+          rules={rules}
+          templateSaveError={templateSaveError}
+          templates={templates}
+        />
+      )}
     </div>
   );
 }

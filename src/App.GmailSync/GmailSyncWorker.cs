@@ -6,6 +6,7 @@ public sealed class GmailSyncWorker(
     GmailSyncSettings settings,
     IServiceProvider serviceProvider,
     IServiceScopeFactory scopeFactory,
+    IHostApplicationLifetime applicationLifetime,
     ILogger<GmailSyncWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -20,6 +21,25 @@ public sealed class GmailSyncWorker(
             "Gmail sync started for workspace {WorkspaceKey} with {LabelCount} configured labels.",
             settings.WorkspaceKey,
             settings.Labels.Count);
+
+        if (settings.RunOnce)
+        {
+            try
+            {
+                await RunOnceAsync(stoppingToken);
+            }
+            catch
+            {
+                Environment.ExitCode = 1;
+                throw;
+            }
+            finally
+            {
+                applicationLifetime.StopApplication();
+            }
+
+            return;
+        }
 
         while (!stoppingToken.IsCancellationRequested)
         {

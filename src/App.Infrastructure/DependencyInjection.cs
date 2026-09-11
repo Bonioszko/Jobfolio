@@ -14,18 +14,13 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Postgres")
-            ?? "Host=localhost;Port=5432;Database=jobparser;Username=jobparser;Password=jobparser";
-
-        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
-        services.AddSingleton(TimeProvider.System);
+        services.AddPersistenceInfrastructure(configuration);
         services.AddSingleton<IDomainConfigurationProvider, FileDomainConfigurationProvider>();
         services.AddSingleton<ISystemRulesProvider, FileSystemRulesProvider>();
         services.AddSingleton(CvWorkflowSettingsFactory.Create(configuration));
         services.AddSingleton(CodexCliOptions.FromConfiguration(configuration));
 
         services.AddScoped<IDemoSessionService, DemoSessionService>();
-        services.AddScoped<IApplicationDatabaseInitializer, ApplicationDatabaseInitializer>();
         services.AddScoped<IDemoWorkspaceSeeder, DemoWorkspaceSeeder>();
         services.AddScoped<IJobPostingQueryService, JobPostingQueryService>();
         services.AddScoped<IApplicationStatusService, ApplicationStatusService>();
@@ -95,6 +90,17 @@ public static class DependencyInjection
         services.AddSingleton<IArtifactStorage>(_ => new LocalArtifactStorage(
             configuration["Artifacts:Root"]));
 
+        return services;
+    }
+
+    public static IServiceCollection AddPersistenceInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var connectionString = DatabaseConnectionString.Create(configuration);
+        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IApplicationDatabaseInitializer, ApplicationDatabaseInitializer>();
         return services;
     }
 

@@ -4,9 +4,15 @@ using Microsoft.Extensions.Configuration;
 namespace App.Infrastructure;
 
 internal sealed record GmailOAuthSettings(
-    string ClientSecretsPath,
+    string? ClientSecretsPath,
     string TokenStoreDirectory,
-    string UserKey);
+    string UserKey,
+    string? ClientId,
+    string? ClientSecret,
+    string? RefreshToken)
+{
+    public bool UsesRefreshToken => RefreshToken is not null;
+}
 
 internal static class GmailConfiguration
 {
@@ -21,6 +27,7 @@ internal static class GmailConfiguration
             .ToArray() ?? [];
         var settings = new GmailSyncSettings(
             enabled,
+            configuration.GetValue<bool>("Gmail:RunOnce"),
             workspaceKey,
             labels,
             TimeSpan.FromSeconds(ConfigurationValues.GetPositiveInt(
@@ -64,10 +71,22 @@ internal static class GmailConfiguration
 
     public static GmailOAuthSettings CreateOAuthSettings(IConfiguration configuration)
     {
-        var clientSecretsPath = configuration["Gmail:OAuth:ClientSecretsPath"]?.Trim();
-        if (string.IsNullOrWhiteSpace(clientSecretsPath))
+        var clientId = NullIfWhiteSpace(configuration["Gmail:OAuth:ClientId"]);
+        var clientSecret = NullIfWhiteSpace(configuration["Gmail:OAuth:ClientSecret"]);
+        var refreshToken = NullIfWhiteSpace(configuration["Gmail:OAuth:RefreshToken"]);
+        var directCredentialCount = new[] { clientId, clientSecret, refreshToken }
+            .Count(value => value is not null);
+        if (directCredentialCount is > 0 and < 3)
         {
-            throw new InvalidOperationException("Gmail:OAuth:ClientSecretsPath is required.");
+            throw new InvalidOperationException(
+                "Gmail OAuth ClientId, ClientSecret, and RefreshToken must all be configured together.");
+        }
+
+        var clientSecretsPath = configuration["Gmail:OAuth:ClientSecretsPath"]?.Trim();
+        if (directCredentialCount == 0 && string.IsNullOrWhiteSpace(clientSecretsPath))
+        {
+            throw new InvalidOperationException(
+                "Gmail OAuth direct credentials or Gmail:OAuth:ClientSecretsPath are required.");
         }
 
         var tokenStoreDirectory = configuration["Gmail:OAuth:TokenStoreDirectory"]?.Trim();
@@ -78,8 +97,14 @@ internal static class GmailConfiguration
 
         var userKey = configuration["Gmail:OAuth:UserKey"]?.Trim();
         return new GmailOAuthSettings(
-            Path.GetFullPath(clientSecretsPath),
+            string.IsNullOrWhiteSpace(clientSecretsPath) ? null : Path.GetFullPath(clientSecretsPath),
             Path.GetFullPath(tokenStoreDirectory),
-            string.IsNullOrWhiteSpace(userKey) ? "primary" : userKey);
+            string.IsNullOrWhiteSpace(userKey) ? "primary" : userKey,
+            clientId,
+            clientSecret,
+            refreshToken);
     }
+
+    private static string? NullIfWhiteSpace(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

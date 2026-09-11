@@ -29,6 +29,7 @@ export function App() {
   if (session.status === "anonymous") {
     return (
       <DemoLanding
+        demoEnabled={domainConfig.data.features.demo}
         error={demoSession.error ?? session.error ?? getAuthenticationError()}
         googleSignInUrl={googleSignInUrl}
         isStarting={demoSession.isStarting}

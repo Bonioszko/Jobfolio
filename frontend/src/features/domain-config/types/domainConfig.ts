@@ -15,4 +15,8 @@ export type DomainConfig = {
   generatedDocument: { singular: string; plural: string };
   fields: DomainField[];
   statuses: WorkflowStatus[];
+  features: {
+    cv: boolean;
+    demo: boolean;
+  };
 };

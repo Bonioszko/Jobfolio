@@ -7,8 +7,9 @@ builder.Services.AddLocalInfrastructure(builder.Configuration);
 builder.Services.AddHostedService<GmailSyncWorker>();
 
 var host = builder.Build();
-await using (var scope = host.Services.CreateAsyncScope())
+if (builder.Configuration.GetValue<bool?>("Database:InitializeOnStartup") ?? true)
 {
+    await using var scope = host.Services.CreateAsyncScope();
     await scope.ServiceProvider
         .GetRequiredService<IApplicationDatabaseInitializer>()
         .InitializeAsync(CancellationToken.None);

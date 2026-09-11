@@ -10,10 +10,14 @@ namespace App.Api.Endpoints.Authentication;
 public static class AuthenticationEndpoints
 {
     public static IEndpointRouteBuilder MapAuthenticationEndpoints(
-        this IEndpointRouteBuilder endpoints)
+        this IEndpointRouteBuilder endpoints,
+        bool demoEnabled)
     {
-        endpoints.MapPost("/api/auth/demo", CreateDemoAsync)
-            .RequireRateLimiting("demo-session");
+        if (demoEnabled)
+        {
+            endpoints.MapPost("/api/auth/demo", CreateDemoAsync)
+                .RequireRateLimiting("demo-session");
+        }
         endpoints.MapGet("/api/auth/google", StartGoogleSignIn);
         endpoints.MapPost("/api/auth/logout", (Delegate)LogoutAsync)
             .RequireAuthorization();

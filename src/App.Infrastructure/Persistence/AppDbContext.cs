@@ -1,10 +1,13 @@
 using App.Domain;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Infrastructure;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
+    : DbContext(options), IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<DemoSession> DemoSessions => Set<DemoSession>();
     public DbSet<JobPosting> JobPostings => Set<JobPosting>();
     public DbSet<GmailMessageReceipt> GmailMessageReceipts => Set<GmailMessageReceipt>();

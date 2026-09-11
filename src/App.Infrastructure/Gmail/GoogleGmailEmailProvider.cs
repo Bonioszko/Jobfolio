@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using App.Application;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
@@ -53,22 +54,35 @@ internal sealed class GoogleGmailEmailProvider(GmailOAuthSettings settings)
         try
         {
             if (service is not null) return service;
-            ValidateClientSecretsFile(settings.ClientSecretsPath);
-            var clientSecrets = await GoogleClientSecrets.FromFileAsync(
-                settings.ClientSecretsPath,
-                cancellationToken);
-            ValidateClientSecrets(clientSecrets.Secrets);
+            var secrets = await GetClientSecretsAsync(cancellationToken);
             var initializer = new GoogleAuthorizationCodeFlow.Initializer
             {
-                ClientSecrets = clientSecrets.Secrets
+                ClientSecrets = secrets,
+                Scopes = [GmailService.Scope.GmailReadonly]
             };
-            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                initializer,
-                [GmailService.Scope.GmailReadonly],
-                settings.UserKey,
-                true,
-                cancellationToken,
-                new FileDataStore(settings.TokenStoreDirectory, fullPath: true));
+            UserCredential credential;
+            if (settings.UsesRefreshToken)
+            {
+                var flow = new GoogleAuthorizationCodeFlow(initializer);
+                credential = new UserCredential(
+                    flow,
+                    settings.UserKey,
+                    new TokenResponse { RefreshToken = settings.RefreshToken });
+                if (!await credential.RefreshTokenAsync(cancellationToken))
+                {
+                    throw new InvalidOperationException("The configured Gmail refresh token was rejected.");
+                }
+            }
+            else
+            {
+                credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    initializer,
+                    [GmailService.Scope.GmailReadonly],
+                    settings.UserKey,
+                    true,
+                    cancellationToken,
+                    new FileDataStore(settings.TokenStoreDirectory, fullPath: true));
+            }
             service = new GmailService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credential,
@@ -80,6 +94,27 @@ internal sealed class GoogleGmailEmailProvider(GmailOAuthSettings settings)
         {
             initializationGate.Release();
         }
+    }
+
+    private async Task<ClientSecrets> GetClientSecretsAsync(CancellationToken cancellationToken)
+    {
+        if (settings.UsesRefreshToken)
+        {
+            var secrets = new ClientSecrets
+            {
+                ClientId = settings.ClientId,
+                ClientSecret = settings.ClientSecret
+            };
+            ValidateClientSecrets(secrets);
+            return secrets;
+        }
+
+        ValidateClientSecretsFile(settings.ClientSecretsPath!);
+        var clientSecrets = await GoogleClientSecrets.FromFileAsync(
+            settings.ClientSecretsPath!,
+            cancellationToken);
+        ValidateClientSecrets(clientSecrets.Secrets);
+        return clientSecrets.Secrets;
     }
 
     private static async Task<IReadOnlyList<string>> ResolveLabelIdsAsync(

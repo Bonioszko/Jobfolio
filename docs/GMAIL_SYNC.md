@@ -50,6 +50,21 @@ The workspace key must use the same `user:<workspace ID>` configured for that em
 `Authentication:Google:AllowedUsers` in the API. For example, an API `WorkspaceId` of
 `user-one` owns Gmail data under `user:user-one`. Demo workspaces are rejected.
 
+## Personal Cloud Run job
+
+The low-cost personal deployment executes one synchronization pass and exits by setting:
+
+```text
+Gmail__Enabled=true
+Gmail__RunOnce=true
+```
+
+For a non-interactive Cloud Run Job, configure `Gmail:OAuth:ClientId`,
+`Gmail:OAuth:ClientSecret`, and `Gmail:OAuth:RefreshToken` together. The client secret and
+refresh token are injected from Secret Manager. Local development keeps using the desktop
+authorization flow and `FileDataStore`; cloud jobs never attempt to open a browser or persist
+credentials on their ephemeral filesystem.
+
 ## Processing behavior
 
 For each selected message, the worker:
