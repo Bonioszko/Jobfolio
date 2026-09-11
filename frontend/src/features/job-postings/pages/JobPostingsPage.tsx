@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorMessage } from "../../../components/common/ErrorMessage";
+import { AppHeader } from "../../../components/layout/AppHeader";
 import type { Session } from "../../auth/types/session";
 import { useCandidateRules } from "../../candidate-rules/hooks/useCandidateRules";
 import { useCvTemplates } from "../../cv-templates/hooks/useCvTemplates";
@@ -25,14 +26,15 @@ export function JobPostingsPage({
   onLogout,
   session,
 }: JobPostingsPageProps) {
-  const [selectedPostingId, setSelectedPostingId] = useState<string>();
+  const [selectedPostingId, setSelectedPostingId] = useState<string | undefined>(() =>
+    new URLSearchParams(window.location.search).get("job") ?? undefined,
+  );
   const visiblePostingIds = useRef<string[]>([]);
   const postings = useJobPostings();
   const templates = useCvTemplates(domain.features.cv);
   const rules = useCandidateRules(domain.features.cv);
 
   const error = postings.error ?? templates.error ?? rules.error ?? authenticationError;
-  const sessionLabel = session?.mode.toLowerCase() === "demo" ? "Demo session" : "Workspace";
   const selectedPosting = postings.data.find((posting) => posting.id === selectedPostingId);
 
   useEffect(() => {
@@ -70,30 +72,14 @@ export function JobPostingsPage({
 
   return (
     <main className="app-shell">
-      <header className="app-header">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">J</span>
-          <div>
-            <span className="brand-name">Jobfolio</span>
-            <span className="brand-context">Application workspace</span>
-          </div>
-        </div>
-        <div className="workspace-meta">
-          <span>{postings.data.length} opportunities</span>
-          <span className="workspace-badge">{sessionLabel}</span>
-          {session?.mode.toLowerCase() === "demo" ? (
-            <a className="workspace-auth-link" href={googleSignInUrl}>Sign in</a>
-          ) : (
-            <button
-              className="workspace-auth-link"
-              disabled={isLoggingOut}
-              onClick={() => void onLogout()}
-            >
-              {isLoggingOut ? "Signing out…" : "Sign out"}
-            </button>
-          )}
-        </div>
-      </header>
+      <AppHeader
+        activePage="jobs"
+        googleSignInUrl={googleSignInUrl}
+        isLoggingOut={isLoggingOut}
+        onLogout={onLogout}
+        session={session}
+        summary={`${postings.data.length} opportunities`}
+      />
       <ErrorMessage className="banner" message={error} />
       <section className="workspace-layout">
         {postings.isLoading ? (

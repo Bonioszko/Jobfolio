@@ -6,6 +6,7 @@ import { useDemoSession } from "../features/demo/hooks/useDemoSession";
 import { DemoLanding } from "../features/demo/components/DemoLanding";
 import { useDomainConfig } from "../features/domain-config/hooks/useDomainConfig";
 import { JobPostingsPage } from "../features/job-postings/pages/JobPostingsPage";
+import { InterviewDashboardPage } from "../features/interview-dashboard/pages/InterviewDashboardPage";
 
 export function App() {
   const domainConfig = useDomainConfig();
@@ -34,6 +35,19 @@ export function App() {
         googleSignInUrl={googleSignInUrl}
         isStarting={demoSession.isStarting}
         onStartDemo={demoSession.start}
+      />
+    );
+  }
+
+  if (window.location.pathname === "/interviews") {
+    return (
+      <InterviewDashboardPage
+        authenticationError={session.error}
+        domain={domainConfig.data}
+        googleSignInUrl={googleSignInUrl}
+        isLoggingOut={session.isLoggingOut}
+        onLogout={session.logout}
+        session={session.session}
       />
     );
   }

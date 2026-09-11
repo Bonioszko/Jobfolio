@@ -1,22 +1,35 @@
 import { httpClient } from "../../../lib/api/httpClient";
 import type { JobPosting, JobPostingPage } from "../types/jobPosting";
 
-export function getJobPostings(cursor?: string, signal?: AbortSignal, limit = 100) {
+type JobPostingFilters = {
+  status?: string;
+};
+
+export function getJobPostings(
+  cursor?: string,
+  signal?: AbortSignal,
+  limit = 100,
+  filters: JobPostingFilters = {},
+) {
   const parameters = new URLSearchParams({ limit: String(limit) });
   if (cursor) parameters.set("cursor", cursor);
+  if (filters.status) parameters.set("status", filters.status);
 
   const query = `?${parameters.toString()}`;
   return httpClient.get<JobPostingPage>(`/api/source-items${query}`, { signal });
 }
 
-export async function getAllJobPostings(signal?: AbortSignal) {
+export async function getAllJobPostings(
+  signal?: AbortSignal,
+  filters: JobPostingFilters = {},
+) {
   const items: JobPosting[] = [];
   const seenIds = new Set<string>();
   const seenCursors = new Set<string>();
   let cursor: string | undefined;
 
   do {
-    const page = await getJobPostings(cursor, signal);
+    const page = await getJobPostings(cursor, signal, 100, filters);
     for (const posting of page.items) {
       if (seenIds.add(posting.id)) items.push(posting);
     }

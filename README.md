@@ -53,7 +53,7 @@ Tectonic must be installed on the compiler worker's `PATH`; compilation is delib
 
 ## Current scope
 
-Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, source filtering, dated multi-stage interview notes, three base CV templates, immutable template/rule/job/document models, local Codex CV tailoring for real users, deterministic demo tailoring, TeX validation/compiler, and private local artifact storage.
+Implemented: solution layering, PostgreSQL schema, generic domain configuration, LinkedIn/Just Join IT/No Fluff Jobs parser edges, isolated demo authentication/seeding, job list/detail/status APIs, source filtering, dated multi-stage interview notes, an active interview dashboard, three base CV templates, immutable template/rule/job/document models, local Codex CV tailoring for real users, deterministic demo tailoring, TeX validation/compiler, and private local artifact storage.
 
 The personal GCP profile runs the frontend and API in one scale-to-zero Cloud Run service,
 keeps PostgreSQL on the internal-only Free Tier VM, and runs Gmail imports as scheduled Cloud
