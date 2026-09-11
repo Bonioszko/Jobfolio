@@ -186,7 +186,11 @@ resource "google_cloud_run_v2_service" "web" {
       error_message = "Google authentication requires application_base_url, authentication_google_client_id, and allowed_users."
     }
 
-    ignore_changes = [template[0].containers[0].image]
+    ignore_changes = [
+      client,
+      client_version,
+      template[0].containers[0].image,
+    ]
   }
 
   depends_on = [
@@ -265,7 +269,11 @@ resource "google_cloud_run_v2_job" "database_migrator" {
   }
 
   lifecycle {
-    ignore_changes = [template[0].template[0].containers[0].image]
+    ignore_changes = [
+      client,
+      client_version,
+      template[0].template[0].containers[0].image,
+    ]
   }
 
   depends_on = [
@@ -401,7 +409,11 @@ resource "google_cloud_run_v2_job" "gmail_sync" {
       error_message = "Every Gmail sync workspace_id must belong to an allowed user."
     }
 
-    ignore_changes = [template[0].template[0].containers[0].image]
+    ignore_changes = [
+      client,
+      client_version,
+      template[0].template[0].containers[0].image,
+    ]
   }
 
   depends_on = [
