@@ -36,7 +36,17 @@ public sealed class GmailMessageProcessor(
             return GmailMessageProcessingOutcome.Ambiguous;
         }
 
-        var parsed = await selection.Parser.ParseAsync(email, cancellationToken);
+        IReadOnlyList<ParseResult> parsed;
+        try
+        {
+            parsed = await selection.Parser.ParseAsync(email, cancellationToken);
+        }
+        catch (FormatException)
+        {
+            await SaveOutcomeAsync("UNSUPPORTED", selection.Parser, [], cancellationToken);
+            return GmailMessageProcessingOutcome.Unsupported;
+        }
+
         var enriched = new List<ParseResult>(parsed.Count);
         foreach (var posting in parsed)
         {

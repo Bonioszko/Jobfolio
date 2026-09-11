@@ -71,6 +71,27 @@ public sealed class GmailMessageProcessorTests
     }
 
     [Fact]
+    public async Task Processor_records_a_matched_message_with_an_unrecognized_layout_as_unsupported()
+    {
+        var store = new RecordingStore();
+        var processor = new GmailMessageProcessor(
+            new FixedRegistry(new UnrecognizedMessageParser()),
+            new StubEnricher("unused"),
+            store);
+
+        var outcome = await processor.ProcessAsync(
+            "user:owner",
+            CreateEmail(),
+            CancellationToken.None);
+
+        Assert.Equal(GmailMessageProcessingOutcome.Unsupported, outcome);
+        Assert.Equal("UNSUPPORTED", store.Status);
+        Assert.Equal("indeed", store.ParserKey);
+        Assert.Equal(3, store.ParserVersion);
+        Assert.Empty(store.Postings);
+    }
+
+    [Fact]
     public async Task Processor_skips_a_message_receipt_that_already_exists()
     {
         var store = new RecordingStore { AlreadyProcessed = true };
@@ -133,6 +154,19 @@ public sealed class GmailMessageProcessorTests
         }
     }
 
+    private sealed class UnrecognizedMessageParser : ISourceParser
+    {
+        public string Key => "indeed";
+        public int Version => 3;
+        public bool CanParse(EmailMessage email) => true;
+
+        public Task<IReadOnlyList<ParseResult>> ParseAsync(
+            EmailMessage email,
+            CancellationToken cancellationToken) =>
+            Task.FromException<IReadOnlyList<ParseResult>>(
+                new FormatException("The email did not contain a recognizable job posting."));
+    }
+
     private sealed class SelectiveFetcher(
         string sourceKey,
         string enrichableExternalId,
@@ -162,6 +196,8 @@ public sealed class GmailMessageProcessorTests
     {
         public bool AlreadyProcessed { get; init; }
         public string? Status { get; private set; }
+        public string? ParserKey { get; private set; }
+        public int? ParserVersion { get; private set; }
         public IReadOnlyList<ParseResult> Postings { get; private set; } = [];
 
         public Task<bool> IsProcessedAsync(
@@ -179,6 +215,8 @@ public sealed class GmailMessageProcessorTests
             CancellationToken cancellationToken)
         {
             Status = processingStatus;
+            ParserKey = parserKey;
+            ParserVersion = parserVersion;
             Postings = postings;
             return Task.CompletedTask;
         }
