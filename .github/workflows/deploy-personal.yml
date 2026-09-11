@@ -1,0 +1,124 @@
+name: Deploy personal
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-personal
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: your-gcp-project-id
+  REGION: us-central1
+  REPOSITORY: jobparser-containers
+  IMAGE_NAME: application
+
+jobs:
+  deploy:
+    if: vars.GCP_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verify backend
+        run: |
+          dotnet restore JobParser.slnx --configfile NuGet.Config
+          dotnet build JobParser.slnx --configuration Release --no-restore
+          dotnet test JobParser.slnx --configuration Release --no-build
+
+      - name: Verify frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm run build
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Artifact Registry authentication
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and push immutable image
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}"
+          docker build --platform linux/amd64 --tag "${image}:${GITHUB_SHA}" .
+          docker push "${image}:${GITHUB_SHA}"
+          digest="$(gcloud artifacts docker images describe "${image}:${GITHUB_SHA}" --format='value(image_summary.digest)')"
+          test -n "${digest}"
+          echo "reference=${image}@${digest}" >> "${GITHUB_OUTPUT}"
+
+      - name: Run database migrations
+        run: |
+          gcloud run jobs update jobparser-db-migrate \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --image="${{ steps.image.outputs.reference }}" \
+            --quiet
+          gcloud run jobs execute jobparser-db-migrate \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --wait
+
+      - name: Update Gmail synchronization jobs
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r job; do
+            if [[ -n "${job}" ]]; then
+              gcloud run jobs update "${job}" \
+                --project="${PROJECT_ID}" \
+                --region="${REGION}" \
+                --image="${{ steps.image.outputs.reference }}" \
+                --quiet
+            fi
+          done < <(gcloud run jobs list \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --filter='metadata.labels.component=gmail-sync' \
+            --format='value(metadata.name)')
+
+      - name: Deploy web application
+        run: |
+          gcloud run services update jobparser-web \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --image="${{ steps.image.outputs.reference }}" \
+            --quiet
+
+      - name: Verify health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          service_url="$(gcloud run services describe jobparser-web \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --format='value(status.url)')"
+          curl --fail --show-error --silent \
+            --retry 5 --retry-all-errors --retry-delay 3 \
+            "${service_url}/api/health"
