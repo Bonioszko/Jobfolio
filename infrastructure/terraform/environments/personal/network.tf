@@ -31,3 +31,19 @@ resource "google_compute_firewall" "iap_ssh" {
     ports    = ["22"]
   }
 }
+
+resource "google_compute_firewall" "cloud_run_postgres" {
+  name      = "jobparser-allow-cloud-run-postgres"
+  project   = var.project_id
+  network   = google_compute_network.personal.name
+  direction = "INGRESS"
+  priority  = 1000
+
+  source_tags = ["jobparser-cloud-run"]
+  target_tags = ["jobparser-db"]
+
+  allow {
+    protocol = "tcp"
+    ports    = ["5432"]
+  }
+}

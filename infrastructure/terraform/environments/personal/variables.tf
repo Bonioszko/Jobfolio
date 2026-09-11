@@ -70,3 +70,98 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "application_runtime_enabled" {
+  description = "Creates the low-cost Cloud Run web service and supporting jobs after the application image and secrets are ready."
+  type        = bool
+  default     = false
+}
+
+variable "application_image" {
+  description = "Immutable linux/amd64 Job Parser image reference in Artifact Registry, including its sha256 digest."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.application_image == "" || can(regex("^[a-z0-9.-]+/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$", var.application_image))
+    error_message = "application_image must be empty or an Artifact Registry image pinned by sha256 digest."
+  }
+}
+
+variable "application_base_url" {
+  description = "Public HTTPS URL of the Cloud Run web service, used as the post-login redirect."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.application_base_url == "" || can(regex("^https://[^/]+/?$", var.application_base_url))
+    error_message = "application_base_url must be empty or an HTTPS origin without a path."
+  }
+}
+
+variable "authentication_enabled" {
+  description = "Enables Google sign-in after the web OAuth client and allowed users are configured."
+  type        = bool
+  default     = false
+}
+
+variable "authentication_google_client_id" {
+  description = "Google Web OAuth client ID used to sign in to the application."
+  type        = string
+  default     = ""
+}
+
+variable "allowed_users" {
+  description = "Map of allowlisted Google account emails to stable application workspace IDs."
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition = length(var.allowed_users) <= 10 && alltrue([
+      for email, workspace_id in var.allowed_users :
+      can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", email)) &&
+      can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", workspace_id))
+    ])
+    error_message = "allowed_users must contain at most ten valid emails mapped to valid workspace IDs."
+  }
+}
+
+variable "gmail_oauth_client_id" {
+  description = "Desktop OAuth client ID used by the scheduled Gmail synchronization jobs."
+  type        = string
+  default     = ""
+}
+
+variable "gmail_sync_accounts" {
+  description = "Scheduled Gmail imports keyed by a short stable account name. Secret values are added separately."
+  type = map(object({
+    workspace_id = string
+    labels       = list(string)
+    schedule     = optional(string, "*/30 * * * *")
+    time_zone    = optional(string, "Europe/Warsaw")
+    enabled      = optional(bool, true)
+  }))
+  default = {}
+
+  validation {
+    condition = length(var.gmail_sync_accounts) <= 2 && alltrue([
+      for key, account in var.gmail_sync_accounts :
+      can(regex("^[a-z0-9][a-z0-9-]{0,28}[a-z0-9]$", key)) &&
+      can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", account.workspace_id)) &&
+      length(account.labels) > 0 && length(account.labels) <= 20 &&
+      length(distinct(account.labels)) == length(account.labels)
+    ])
+    error_message = "gmail_sync_accounts supports at most two valid account definitions with at least one label each."
+  }
+}
+
+variable "github_repository" {
+  description = "Optional GitHub repository in owner/name form. When set, creates keyless deployment identity federation."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.github_repository == "" || can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_repository))
+    error_message = "github_repository must be empty or use owner/name form."
+  }
+}

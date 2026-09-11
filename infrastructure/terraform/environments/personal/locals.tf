@@ -1,13 +1,18 @@
 locals {
   required_services = toset([
     "artifactregistry.googleapis.com",
+    "cloudscheduler.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    "iamcredentials.googleapis.com",
     "compute.googleapis.com",
+    "gmail.googleapis.com",
     "iam.googleapis.com",
     "iap.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
+    "networkmanagement.googleapis.com",
     "oslogin.googleapis.com",
+    "run.googleapis.com",
     "secretmanager.googleapis.com",
     "storage.googleapis.com",
   ])
@@ -22,4 +27,16 @@ locals {
   )
 
   postgres_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.containers.repository_id}/postgres@${var.postgres_image_digest}"
+
+  enabled_gmail_sync_accounts = {
+    for key, account in var.gmail_sync_accounts : key => account
+    if account.enabled
+  }
+
+  allowed_user_entries = [
+    for email, workspace_id in var.allowed_users : {
+      email        = email
+      workspace_id = workspace_id
+    }
+  ]
 }

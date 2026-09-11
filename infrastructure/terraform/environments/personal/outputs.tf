@@ -47,3 +47,32 @@ output "postgres_password_secret" {
   description = "Secret Manager secret that will contain the PostgreSQL password."
   value       = google_secret_manager_secret.postgres_password.secret_id
 }
+
+output "web_service_url" {
+  description = "Public Cloud Run URL for the low-cost web service."
+  value       = try(google_cloud_run_v2_service.web[0].uri, null)
+}
+
+output "application_secret_ids" {
+  description = "Secret containers that require operator-managed values before enabling the application runtime."
+  value = merge(
+    {
+      google_auth_client_secret = google_secret_manager_secret.google_auth_client_secret.secret_id
+      gmail_oauth_client_secret = google_secret_manager_secret.gmail_oauth_client_secret.secret_id
+    },
+    {
+      for key, secret in google_secret_manager_secret.gmail_refresh_token :
+      "gmail_refresh_token_${key}" => secret.secret_id
+    },
+  )
+}
+
+output "github_workload_identity_provider" {
+  description = "Provider resource name used by google-github-actions/auth."
+  value       = try(google_iam_workload_identity_pool_provider.github[0].name, null)
+}
+
+output "github_deployer_service_account" {
+  description = "Keyless GitHub Actions deployment service account."
+  value       = try(google_service_account.github_deployer[0].email, null)
+}

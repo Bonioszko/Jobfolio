@@ -91,7 +91,7 @@ docker run --detach \
   --name "$CONTAINER_NAME" \
   --platform linux/amd64 \
   --restart unless-stopped \
-  --publish 127.0.0.1:5432:5432 \
+  --publish 0.0.0.0:5432:5432 \
   --mount "type=bind,source=$POSTGRES_DATA,target=/var/lib/postgresql/data" \
   --mount "type=bind,source=$PASSWORD_FILE,target=/run/secrets/postgres-password,readonly" \
   --env POSTGRES_DB=jobparser \

@@ -110,6 +110,11 @@ Registry through Private Google Access. No Cloud NAT or external VM address is
 required. The Docker port is bound to `127.0.0.1` on the VM, so database access
 currently requires an IAP SSH tunnel even from within the VPC.
 
+This infrastructure slice changes the Docker binding to the VM's private
+interface and permits port 5432 only from Cloud Run revisions carrying the
+`jobparser-cloud-run` network tag. The VM still has no external IP and
+PostgreSQL is never exposed to the internet.
+
 Start the tunnel from the local machine and keep the process running:
 
 ```bash
@@ -170,3 +175,82 @@ test.
 
 Terraform state and real `.tfvars` files are intentionally excluded from Git.
 Commit `.terraform.lock.hcl` so provider selections remain reproducible.
+
+## Low-cost Cloud Run application
+
+The first cloud runtime intentionally excludes CV generation and compilation.
+One approximately 110 MB `linux/amd64` image contains three entry points:
+
+- `/app/api/App.Api.dll` for the React SPA and ASP.NET API;
+- `/app/database-migrator/App.DatabaseMigrator.dll` for EF migrations;
+- `/app/gmail-sync/App.GmailSync.dll` for scheduled one-shot imports.
+
+Cloud Run uses request-based billing, zero minimum instances, one maximum web
+instance, 512 MiB RAM, and Direct VPC egress. Public demo and CV endpoints are
+disabled in this profile. Gmail jobs run on the configured schedule and exit
+after one synchronization pass.
+
+### Bootstrap order
+
+1. Set `github_repository` in `terraform.tfvars`, keep
+   `application_runtime_enabled = false`, review `terraform plan`, and apply the
+   identity/secret-container slice.
+2. Build and push the first immutable image from the repository root:
+
+   ```bash
+   docker buildx build \
+     --platform linux/amd64 \
+     --push \
+     --tag us-central1-docker.pkg.dev/your-gcp-project-id/jobparser-containers/application:bootstrap \
+     .
+   gcloud artifacts docker images describe \
+     us-central1-docker.pkg.dev/your-gcp-project-id/jobparser-containers/application:bootstrap \
+     --format='value(image_summary.digest)'
+   ```
+
+3. Set `application_image` to the returned `.../application@sha256:...`
+   reference. Enable the runtime with authentication still disabled and Gmail
+   accounts still empty. Apply, then read `terraform output web_service_url`.
+4. Create a Google OAuth client of type Web application. Register
+   `<web_service_url>/signin-google`, place its client secret in a temporary
+   file outside the repository, and add it without putting the value in shell
+   history:
+
+   ```bash
+   gcloud secrets versions add jobparser-google-auth-client-secret \
+     --data-file=/absolute/private/path/google-auth-client-secret.txt
+   ```
+
+5. Set `application_base_url`, `authentication_google_client_id`,
+   `authentication_enabled = true`, and both `allowed_users`. Apply again.
+6. Execute the database migration job before signing in:
+
+   ```bash
+   gcloud run jobs execute jobparser-db-migrate \
+     --project=your-gcp-project-id \
+     --region=us-central1 \
+     --wait
+   ```
+
+7. For each Gmail account, add the common desktop OAuth client secret and the
+   account's refresh token to their Secret Manager containers, then add the
+   corresponding `gmail_sync_accounts` entry and apply. Secret values are never
+   Terraform variables and never enter Terraform state.
+
+### Automatic deployment
+
+Terraform creates a Workload Identity Federation provider and a deployment
+service account when `github_repository` is set. Add these repository variables
+in GitHub Actions using the Terraform outputs:
+
+```text
+GCP_WORKLOAD_IDENTITY_PROVIDER = terraform output -raw github_workload_identity_provider
+GCP_DEPLOYER_SERVICE_ACCOUNT   = terraform output -raw github_deployer_service_account
+GCP_DEPLOY_ENABLED             = true
+```
+
+Before `GCP_DEPLOY_ENABLED` is set, the deployment workflow safely remains
+skipped. Afterwards, every push to `main` runs backend and frontend checks,
+builds and pushes a digest-pinned image, runs the migration job, updates Gmail
+jobs, deploys the web revision, and verifies `/api/health`. Terraform continues
+to own service configuration while the workflow owns container-image revisions.

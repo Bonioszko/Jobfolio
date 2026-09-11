@@ -6,3 +6,35 @@ operator_email = "your-google-account@example.com"
 
 # Leave false until the PostgreSQL image has been copied to Artifact Registry.
 database_vm_enabled = false
+
+# Low-cost application runtime. Bootstrap the image and Secret Manager values
+# before changing this to true.
+application_runtime_enabled = false
+application_image           = ""
+
+# Enable after the first Cloud Run service exists and its HTTPS URL has been
+# registered in a Google Web OAuth client as /signin-google.
+application_base_url             = ""
+authentication_enabled           = false
+authentication_google_client_id = ""
+allowed_users                    = {}
+
+# Add up to two accounts after their refresh-token secret versions exist.
+gmail_oauth_client_id = ""
+gmail_sync_accounts  = {}
+
+# Example values:
+# allowed_users = {
+#   "first@example.com"  = "first-user"
+#   "second@example.com" = "second-user"
+# }
+# gmail_sync_accounts = {
+#   first = {
+#     workspace_id = "first-user"
+#     labels       = ["Job alerts"]
+#     schedule     = "*/30 * * * *"
+#   }
+# }
+
+# Creates Workload Identity Federation for keyless deployment from main.
+github_repository = ""
