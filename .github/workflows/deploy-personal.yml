@@ -15,9 +15,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PROJECT_ID: your-gcp-project-id
-  REGION: us-central1
-  REPOSITORY: jobparser-containers
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION || 'us-central1' }}
+  REPOSITORY: ${{ vars.GCP_ARTIFACT_REPOSITORY || 'jobparser-containers' }}
   IMAGE_NAME: application
 
 jobs:
@@ -26,6 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        run: test -n "${PROJECT_ID}"
 
       - uses: actions/setup-dotnet@v4
         with:

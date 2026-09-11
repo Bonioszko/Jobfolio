@@ -5,8 +5,9 @@ Job Parser. The database VM is internal-only: it never receives an external
 IPv4 address.
 
 Terraform state is stored in the private, versioned Google Cloud Storage bucket
-`your-gcp-project-id-jobparser-tfstate`. The bucket is a bootstrap resource: it
-must exist before `terraform init`, and Terraform does not manage or delete it.
+configured through the ignored `backend.hcl` file. The bucket is a bootstrap
+resource: it must exist before `terraform init`, and Terraform does not manage
+or delete it.
 
 ## Local setup
 
@@ -16,36 +17,51 @@ Authenticate with Application Default Credentials:
 gcloud auth application-default login
 ```
 
-Create the ignored local variable file:
+Create the ignored local variable and backend files:
 
 ```bash
 cp terraform.tfvars.example terraform.tfvars
+cp backend.hcl.example backend.hcl
 ```
 
-Replace `operator_email` with the Google account used by `gcloud`. Terraform
-grants that account IAP tunnel access, OS Login administrator access, and
-permission to use the database VM's service account while connecting.
+Replace the placeholders in both files. Set `project_id` and `operator_email`
+in `terraform.tfvars`, and set the same project's private state-bucket name in
+`backend.hcl`. Terraform grants the operator account IAP tunnel access, OS
+Login administrator access, and permission to use the database VM's service
+account while connecting.
+
+Export the same non-secret identifiers for the copy-and-paste commands below:
+
+```bash
+export JOBPARSER_GCP_PROJECT_ID="your-gcp-project-id"
+export JOBPARSER_GCP_REGION="us-central1"
+export JOBPARSER_GCP_ZONE="us-central1-a"
+export JOBPARSER_TF_STATE_BUCKET="your-gcp-project-id-jobparser-tfstate"
+```
 
 Create the state bucket once before the first initialization:
 
 ```bash
-gcloud storage buckets create gs://your-gcp-project-id-jobparser-tfstate \
-  --project=your-gcp-project-id \
-  --location=us-central1 \
+gcloud storage buckets create "gs://${JOBPARSER_TF_STATE_BUCKET}" \
+  --project="${JOBPARSER_GCP_PROJECT_ID}" \
+  --location="${JOBPARSER_GCP_REGION}" \
   --default-storage-class=STANDARD \
   --uniform-bucket-level-access \
   --public-access-prevention
-gcloud storage buckets update gs://your-gcp-project-id-jobparser-tfstate \
+gcloud storage buckets update "gs://${JOBPARSER_TF_STATE_BUCKET}" \
   --versioning
 ```
 
 Then initialize and validate the configuration:
 
 ```bash
-terraform init
+terraform init -backend-config=backend.hcl
 terraform fmt -check -recursive
 terraform validate
 ```
+
+If this checkout was initialized before backend values moved to `backend.hcl`,
+run `terraform init -reconfigure -backend-config=backend.hcl` once instead.
 
 Do not run `terraform apply` until the first infrastructure slice has been
 reviewed.
@@ -58,12 +74,12 @@ image normally from an Apple Silicon Mac copies only `linux/arm64` and the
 container then fails with `exec format error`.
 
 ```bash
-gcloud auth configure-docker us-central1-docker.pkg.dev
+gcloud auth configure-docker "${JOBPARSER_GCP_REGION}-docker.pkg.dev"
 docker buildx imagetools create \
-  --tag us-central1-docker.pkg.dev/your-gcp-project-id/jobparser-containers/postgres:17-alpine \
+  --tag "${JOBPARSER_GCP_REGION}-docker.pkg.dev/${JOBPARSER_GCP_PROJECT_ID}/jobparser-containers/postgres:17-alpine" \
   docker.io/library/postgres:17-alpine
 docker buildx imagetools inspect \
-  us-central1-docker.pkg.dev/your-gcp-project-id/jobparser-containers/postgres:17-alpine
+  "${JOBPARSER_GCP_REGION}-docker.pkg.dev/${JOBPARSER_GCP_PROJECT_ID}/jobparser-containers/postgres:17-alpine"
 ```
 
 Set `postgres_image_digest` to the resulting top-level index digest. The VM
@@ -119,8 +135,8 @@ Start the tunnel from the local machine and keep the process running:
 
 ```bash
 gcloud compute ssh jobparser-db \
-  --project=your-gcp-project-id \
-  --zone=us-central1-a \
+  --project="${JOBPARSER_GCP_PROJECT_ID}" \
+  --zone="${JOBPARSER_GCP_ZONE}" \
   --tunnel-through-iap \
   -- -N -L 127.0.0.1:5433:127.0.0.1:5432
 ```
@@ -158,20 +174,18 @@ docker compose --project-directory ../../../.. stop postgres
 Pre-migration dumps are stored under the ignored `.private-backups/` directory.
 They contain private application data and must never be committed.
 
-## Step 9 migration verification
+## Migration verification
 
-The local PostgreSQL 17.11 database was migrated on YYYY-MM-DD. The source and
-destination matched across all 15 application tables before cutover. The local
-Docker volume remains stopped and available as a rollback copy. A verified
-custom-format dump is retained locally at
-`.private-backups/jobparser-local-before-cloud.dump` with mode `0600`.
+Before cutover, compare the source and destination table counts and retain a
+verified custom-format dump under the ignored `.private-backups/` directory
+with mode `0600`. Keep the old local Docker volume stopped and available until
+the cloud database passes verification.
 
-The VM reboot test confirmed that the data disk remounts and PostgreSQL starts
-automatically without reinitializing the database. Snapshot
-`jobparser-postgres-migration-snapshot` was restored to a temporary disk and opened
-by an isolated PostgreSQL container; the restored key table counts matched the
-primary database. The temporary disk and container were removed after the
-test.
+Test a VM reboot to confirm that the data disk remounts and PostgreSQL starts
+without reinitializing the database. Restore a recent snapshot to a temporary
+disk, open it with an isolated PostgreSQL container, and compare its key table
+counts with the primary database. Keep concrete snapshot names and migration
+dates in private operational notes rather than this repository.
 
 Terraform state and real `.tfvars` files are intentionally excluded from Git.
 Commit `.terraform.lock.hcl` so provider selections remain reproducible.
@@ -201,10 +215,10 @@ after one synchronization pass.
    docker buildx build \
      --platform linux/amd64 \
      --push \
-     --tag us-central1-docker.pkg.dev/your-gcp-project-id/jobparser-containers/application:bootstrap \
+     --tag "${JOBPARSER_GCP_REGION}-docker.pkg.dev/${JOBPARSER_GCP_PROJECT_ID}/jobparser-containers/application:bootstrap" \
      .
    gcloud artifacts docker images describe \
-     us-central1-docker.pkg.dev/your-gcp-project-id/jobparser-containers/application:bootstrap \
+     "${JOBPARSER_GCP_REGION}-docker.pkg.dev/${JOBPARSER_GCP_PROJECT_ID}/jobparser-containers/application:bootstrap" \
      --format='value(image_summary.digest)'
    ```
 
@@ -227,8 +241,8 @@ after one synchronization pass.
 
    ```bash
    gcloud run jobs execute jobparser-db-migrate \
-     --project=your-gcp-project-id \
-     --region=us-central1 \
+     --project="${JOBPARSER_GCP_PROJECT_ID}" \
+     --region="${JOBPARSER_GCP_REGION}" \
      --wait
    ```
 
@@ -244,6 +258,9 @@ service account when `github_repository` is set. Add these repository variables
 in GitHub Actions using the Terraform outputs:
 
 ```text
+GCP_PROJECT_ID                  = the project_id value from terraform.tfvars
+GCP_REGION                      = the deployment region, for example us-central1
+GCP_ARTIFACT_REPOSITORY         = jobparser-containers
 GCP_WORKLOAD_IDENTITY_PROVIDER = terraform output -raw github_workload_identity_provider
 GCP_DEPLOYER_SERVICE_ACCOUNT   = terraform output -raw github_deployer_service_account
 GCP_DEPLOY_ENABLED             = true

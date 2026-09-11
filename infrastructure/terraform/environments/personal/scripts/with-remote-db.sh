@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly JOBPARSER_PROJECT_ID="${JOBPARSER_GCP_PROJECT_ID:-your-gcp-project-id}"
+readonly JOBPARSER_PROJECT_ID="${JOBPARSER_GCP_PROJECT_ID:?Set JOBPARSER_GCP_PROJECT_ID to the target Google Cloud project ID.}"
 readonly JOBPARSER_SECRET_ID="${JOBPARSER_DB_SECRET_ID:-jobparser-postgres-password}"
 readonly JOBPARSER_LOCAL_PORT="${JOBPARSER_DB_LOCAL_PORT:-5433}"
 

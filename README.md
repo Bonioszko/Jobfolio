@@ -2,6 +2,10 @@
 
 Local-first .NET 10 and React implementation for parsing job-alert emails, tracking applications, tailoring versioned TeX CVs, and compiling private PDFs. The initial runtime uses PostgreSQL in Docker; cloud adapters are intentionally deferred.
 
+See [Configuration](docs/CONFIGURATION.md) for local secrets, Google sign-in,
+Gmail authorization, Terraform backend setup, Secret Manager, and GitHub
+Actions deployment configuration.
+
 ## Start PostgreSQL
 
 Copy `.env.example` to `.env` before the first run. If port `5432` is already
