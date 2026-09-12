@@ -26,14 +26,43 @@ public sealed class GmailImportStore(AppDbContext db) : IGmailImportStore
     {
         if (await IsProcessedAsync(workspaceKey, email.ExternalId, cancellationToken)) return;
 
+        var existingPostings = await db.JobPostings
+            .AsNoTracking()
+            .Where(posting => posting.WorkspaceKey == workspaceKey)
+            .Select(posting => new
+            {
+                posting.ProviderKey,
+                posting.ProviderExternalId,
+                posting.Title,
+                posting.NormalizedDataJson
+            })
+            .ToListAsync(cancellationToken);
+        var knownProviderPostings = existingPostings
+            .Where(posting => posting.ProviderExternalId is not null)
+            .Select(posting => ProviderPostingKey(
+                posting.ProviderKey,
+                posting.ProviderExternalId!))
+            .ToHashSet(StringComparer.Ordinal);
+        var knownPostingIdentities = existingPostings
+            .Select(posting => ReadIdentity(posting.Title, posting.NormalizedDataJson))
+            .OfType<JobPostingIdentity>()
+            .ToList();
+
         foreach (var result in postings)
         {
-            var exists = await db.JobPostings.AnyAsync(
-                posting => posting.WorkspaceKey == workspaceKey &&
-                           posting.ProviderKey == result.SourceKey &&
-                           posting.ProviderExternalId == result.SourceExternalId,
-                cancellationToken);
-            if (exists) continue;
+            if (!knownProviderPostings.Add(
+                    ProviderPostingKey(result.SourceKey, result.SourceExternalId)))
+            {
+                continue;
+            }
+
+            var identity = JobPostingDeduplication.CreateIdentity(result);
+            if (identity is not null &&
+                knownPostingIdentities.Any(existing =>
+                    JobPostingDeduplication.AreDuplicates(existing, identity)))
+            {
+                continue;
+            }
 
             db.JobPostings.Add(new JobPosting
             {
@@ -48,6 +77,10 @@ public sealed class GmailImportStore(AppDbContext db) : IGmailImportStore
                 ParserVersion = parserVersion ?? 0,
                 SourceReceivedAt = email.ReceivedAt
             });
+            if (identity is not null)
+            {
+                knownPostingIdentities.Add(identity);
+            }
         }
 
         db.GmailMessageReceipts.Add(new GmailMessageReceipt
@@ -61,4 +94,38 @@ public sealed class GmailImportStore(AppDbContext db) : IGmailImportStore
         });
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    private static string ProviderPostingKey(
+        string providerKey,
+        string providerExternalId) =>
+        string.Concat(providerKey, "\u001f", providerExternalId);
+
+    private static JobPostingIdentity? ReadIdentity(
+        string title,
+        string normalizedDataJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(normalizedDataJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            return JobPostingDeduplication.CreateIdentity(
+                title,
+                ReadString(document.RootElement, "company"),
+                ReadString(document.RootElement, "location"));
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? ReadString(JsonElement element, string propertyName) =>
+        element.TryGetProperty(propertyName, out var property) &&
+        property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
 }
