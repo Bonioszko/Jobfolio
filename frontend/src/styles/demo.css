@@ -1,0 +1,80 @@
+.landing {
+  display: grid;
+  min-height: 100vh;
+  padding: 40px;
+  background: #f1f2ee;
+  place-items: center;
+}
+
+.landing > div {
+  width: min(100%, 820px);
+  padding: clamp(30px, 7vw, 80px);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: 18px 18px 0 #dfe3dc;
+}
+
+.landing .eyebrow {
+  color: var(--accent-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.landing h1 {
+  max-width: 680px;
+  margin: 20px 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 8vw, 82px);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.landing p {
+  max-width: 600px;
+  margin-bottom: 27px;
+  color: var(--ink-soft);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.landing button,
+.google-sign-in {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border-radius: 4px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.landing button {
+  color: white;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.google-sign-in {
+  color: white;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.google-sign-in:hover {
+  background: var(--accent-dark);
+}
+
+.landing small {
+  display: block;
+  margin-top: 14px;
+  color: #7e8681;
+}

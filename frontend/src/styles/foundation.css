@@ -1,0 +1,201 @@
+:root {
+  color: #202523;
+  background: #eceeea;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --paper: #fbfbf8;
+  --surface: #ffffff;
+  --surface-subtle: #f4f5f1;
+  --ink: #202523;
+  --ink-soft: #66706b;
+  --line: #dfe2dc;
+  --line-strong: #c9cec7;
+  --accent: #3157d5;
+  --accent-dark: #2544ad;
+  --accent-soft: #edf1ff;
+  --danger: #a43a3a;
+  --success: #1d7050;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #eceeea;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  color: inherit;
+  font: inherit;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 3px solid rgb(49 87 213 / 24%);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.center {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+}
+
+.app-shell {
+  width: min(100%, 1720px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 22px 28px 30px;
+}
+
+.app-header {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 24px;
+}
+
+.brand-lockup,
+.workspace-meta,
+.detail-company,
+.detail-hero__meta,
+.field-label-row,
+.section-heading-row,
+.generated-result__header {
+  display: flex;
+  align-items: center;
+}
+
+.brand-lockup {
+  gap: 12px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  color: white;
+  background: var(--ink);
+  border-radius: 4px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  place-items: center;
+}
+
+.brand-name,
+.brand-context {
+  display: block;
+}
+
+.brand-name {
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.brand-context {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.workspace-meta {
+  gap: 16px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.app-navigation {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  margin-right: auto;
+  gap: 4px;
+}
+
+.app-navigation a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  padding: 0 13px;
+  color: var(--ink-soft);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.app-navigation a:hover {
+  color: var(--ink);
+  background: rgb(255 255 255 / 48%);
+}
+
+.app-navigation a[aria-current="page"] {
+  color: var(--accent-dark);
+  background: var(--accent-soft);
+}
+
+.workspace-badge {
+  padding: 7px 10px;
+  color: #31513f;
+  background: #e4ece6;
+  border: 1px solid #ccdace;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workspace-auth-link {
+  padding: 0;
+  color: var(--accent-dark);
+  background: none;
+  border: 0;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.workspace-auth-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

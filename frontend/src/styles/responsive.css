@@ -1,0 +1,243 @@
+@media (max-width: 980px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .workspace-layout {
+    overflow: visible;
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .jobs-index,
+  .job-detail-panel {
+    max-height: calc(100vh - 112px);
+  }
+
+  .job-detail {
+    padding: 34px 25px 50px;
+  }
+
+  .workspace-meta > span:first-child {
+    display: none;
+  }
+
+  .interview-process-grid,
+  .interview-dashboard-loading {
+    grid-template-columns: 1fr;
+  }
+
+  .application-kanban {
+    grid-auto-columns: minmax(250px, 42vw);
+  }
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .app-navigation {
+    order: 3;
+    width: 100%;
+    min-height: 42px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .workspace-layout {
+    display: block;
+    overflow: hidden;
+  }
+
+  .jobs-index,
+  .job-detail-panel {
+    max-height: none;
+  }
+
+  .jobs-index {
+    max-height: 54vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .job-detail-panel {
+    overflow: visible;
+  }
+
+  .job-detail {
+    padding: 30px 20px 44px;
+  }
+
+  .detail-hero h1 {
+    font-size: 36px;
+  }
+
+  .job-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-note-form__row {
+    grid-template-columns: 1fr;
+  }
+
+  .tailoring-panel {
+    margin-right: -8px;
+    margin-left: -8px;
+    padding: 22px 18px;
+  }
+
+  .landing {
+    padding: 22px;
+  }
+
+  .landing > div {
+    box-shadow: 9px 9px 0 #dfe3dc;
+  }
+
+  .interview-dashboard {
+    padding: 26px 20px;
+  }
+
+  .interview-dashboard__intro {
+    display: block;
+  }
+
+  .interview-dashboard__intro p {
+    margin-top: 14px;
+  }
+
+  .interview-dashboard__actions {
+    align-items: flex-start;
+  }
+
+  .kanban-page__intro {
+    display: block;
+    padding: 22px 20px 18px;
+  }
+
+  .kanban-page__intro p {
+    margin-top: 10px;
+  }
+
+  .application-kanban {
+    min-height: 520px;
+    padding: 12px;
+    grid-auto-columns: minmax(245px, 82vw);
+  }
+
+  .kanban-column {
+    min-height: 480px;
+  }
+
+  .interview-dashboard-summary > div {
+    padding: 3px 14px;
+  }
+
+  .interview-dashboard-summary dd {
+    font-size: 20px;
+  }
+
+  .interview-process-card__body {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-process-facts {
+    padding: 18px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .managed-process-row {
+    grid-template-columns: minmax(0, 1fr) minmax(125px, 0.6fr);
+  }
+
+  .managed-process-row .secondary-action {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 440px) {
+  .brand-context {
+    display: none;
+  }
+
+  .jobs-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .status-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .status-action {
+    justify-content: flex-start;
+  }
+
+  .workspace-meta {
+    gap: 9px;
+  }
+
+  .interview-dashboard-summary {
+    gap: 16px;
+    grid-template-columns: 1fr;
+  }
+
+  .interview-dashboard-summary > div,
+  .interview-dashboard-summary > div:first-child {
+    padding: 0;
+    border-right: 0;
+  }
+
+  .interview-process-card__header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .interviewing-label {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .last-interview-heading {
+    display: block;
+  }
+
+  .last-interview-heading time {
+    display: block;
+    margin-top: 5px;
+  }
+
+  .manage-interviews-dialog {
+    width: calc(100% - 20px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .manage-interviews-dialog__surface {
+    max-height: calc(100vh - 20px);
+  }
+
+  .manage-interviews-dialog__header,
+  .manage-interviews-section {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .add-process-control,
+  .managed-process-row {
+    grid-template-columns: 1fr;
+  }
+
+  .add-process-control .primary-action,
+  .managed-process-row .secondary-action {
+    width: 100%;
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interview-dashboard-loading span {
+    animation: none;
+  }
+}
