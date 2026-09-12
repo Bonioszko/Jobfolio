@@ -130,7 +130,11 @@ namespace App.Infrastructure.Persistence.Migrations
                     b.Property<string>("Error")
                         .HasColumnType("text");
 
-                    b.Property<Guid>("GeneratedCvVersionId")
+                    b.Property<Guid?>("CvTemplateVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TemplateVersionId");
+
+                    b.Property<Guid?>("GeneratedCvVersionId")
                         .HasColumnType("uuid")
                         .HasColumnName("DocumentVersionId");
 
@@ -152,7 +156,12 @@ namespace App.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("WorkspaceKey");
 
-                    b.ToTable("CompileJobs", (string)null);
+                    b.ToTable("CompileJobs", null, t =>
+                        {
+                            t.HasCheckConstraint(
+                                "CK_CompileJobs_ExactlyOneSource",
+                                "(\"DocumentVersionId\" IS NOT NULL) <> (\"TemplateVersionId\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("App.Domain.CvGenerationJob", b =>
@@ -526,7 +535,11 @@ namespace App.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("GeneratedCvVersionId")
+                    b.Property<Guid?>("CvTemplateVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("TemplateVersionId");
+
+                    b.Property<Guid?>("GeneratedCvVersionId")
                         .HasColumnType("uuid")
                         .HasColumnName("DocumentVersionId");
 
@@ -549,7 +562,12 @@ namespace App.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("WorkspaceKey");
 
-                    b.ToTable("PdfArtifacts", (string)null);
+                    b.ToTable("PdfArtifacts", null, t =>
+                        {
+                            t.HasCheckConstraint(
+                                "CK_PdfArtifacts_ExactlyOneSource",
+                                "(\"DocumentVersionId\" IS NOT NULL) <> (\"TemplateVersionId\" IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>

@@ -954,10 +954,23 @@ summary:focus-visible {
 }
 
 .template-tex-input {
-  min-height: 300px;
-  padding: 12px 13px;
-  font: 12px/1.55 "SFMono-Regular", Consolas, monospace !important;
-  tab-size: 2;
+  height: 360px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+}
+
+.template-compile-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.template-editor-loading {
+  display: grid;
+  height: 100%;
+  color: var(--ink-soft);
+  place-items: center;
 }
 
 .template-save {

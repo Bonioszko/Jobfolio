@@ -54,6 +54,8 @@ dotnet test JobParser.slnx
 ```
 
 Tectonic must be installed on the compiler worker's `PATH`; compilation is deliberately never performed by `App.Api`.
+`Compilation:Executable` may be set to `pdflatex` only when the compiler worker runs in a
+dedicated hardened container with TeX Live installed. Tectonic remains the safe local default.
 
 ## Current scope
 

@@ -20,6 +20,11 @@ public interface ICvCompilationService
         Guid generatedCvVersionId,
         CancellationToken cancellationToken);
 
+    Task<RequestCvCompilationResult> RequestTemplateAsync(
+        string workspaceKey,
+        Guid templateVersionId,
+        CancellationToken cancellationToken);
+
     Task<AsyncJobView?> GetAsync(
         string workspaceKey,
         Guid id,
@@ -82,6 +87,10 @@ public interface ICvCompilationStore
     Task<bool> VersionExistsAsync(
         string workspaceKey,
         Guid generatedCvVersionId,
+        CancellationToken cancellationToken);
+    Task<bool> TemplateVersionExistsAsync(
+        string workspaceKey,
+        Guid templateVersionId,
         CancellationToken cancellationToken);
     Task<bool> TryAddAsync(
         CvCompileJob job,

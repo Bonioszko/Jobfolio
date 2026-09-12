@@ -87,7 +87,7 @@ public sealed class DemoWorkspaceSeeder(
             var template = new CvTemplate
             {
                 WorkspaceKey = workspaceKey,
-                Name = Path.GetFileNameWithoutExtension(file),
+                Name = CvTemplateExampleNames.Get(file),
                 CurrentVersion = 1
             };
             db.CvTemplates.Add(template);

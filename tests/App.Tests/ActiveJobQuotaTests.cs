@@ -85,6 +85,28 @@ public sealed class ActiveJobQuotaTests
         Assert.Single(db.CvCompileJobs);
     }
 
+    [Fact]
+    public async Task Compilation_rejects_a_job_without_exactly_one_source()
+    {
+        await using var db = CreateDbContext();
+        var store = new CvCompilationStore(db);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => store.TryAddAsync(
+            new CvCompileJob { WorkspaceKey = "demo:invalid" },
+            maximumJobsPerWorkspace: 1,
+            CancellationToken.None));
+
+        await Assert.ThrowsAsync<ArgumentException>(() => store.TryAddAsync(
+            new CvCompileJob
+            {
+                WorkspaceKey = "demo:invalid",
+                GeneratedCvVersionId = Guid.NewGuid(),
+                CvTemplateVersionId = Guid.NewGuid()
+            },
+            maximumJobsPerWorkspace: 1,
+            CancellationToken.None));
+    }
+
     private static CvGenerationJob CreateGenerationJob(
         string workspace,
         JobStatus status = JobStatus.Queued) => new()

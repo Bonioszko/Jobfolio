@@ -39,6 +39,35 @@ public sealed class CvCompilationService(
             Map(job));
     }
 
+    public async Task<RequestCvCompilationResult> RequestTemplateAsync(
+        string workspaceKey,
+        Guid templateVersionId,
+        CancellationToken cancellationToken)
+    {
+        if (templateVersionId == Guid.Empty ||
+            !await store.TemplateVersionExistsAsync(workspaceKey, templateVersionId, cancellationToken))
+        {
+            return new RequestCvCompilationResult(RequestCvCompilationOutcome.InvalidInput);
+        }
+
+        var job = new CvCompileJob
+        {
+            WorkspaceKey = workspaceKey,
+            CvTemplateVersionId = templateVersionId
+        };
+        var added = await store.TryAddAsync(
+            job,
+            settings.MaxCompilationJobsPerWorkspace,
+            cancellationToken);
+        if (!added)
+        {
+            return new RequestCvCompilationResult(RequestCvCompilationOutcome.QuotaExceeded);
+        }
+
+        await queue.EnqueueAsync(job.Id, cancellationToken);
+        return new RequestCvCompilationResult(RequestCvCompilationOutcome.Accepted, Map(job));
+    }
+
     public async Task<AsyncJobView?> GetAsync(
         string workspaceKey,
         Guid id,

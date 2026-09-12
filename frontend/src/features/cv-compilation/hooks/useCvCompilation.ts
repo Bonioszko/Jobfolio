@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { pollAsyncJob } from "../../../lib/api/asyncJob";
 import { getErrorMessage, isAbortError } from "../../../lib/errors/getErrorMessage";
-import { createCvCompileJob, getCvCompileJob } from "../api/cvCompilationApi";
+import {
+  createCvCompileJob,
+  createTemplateCompileJob,
+  getCvCompileJob,
+} from "../api/cvCompilationApi";
 
 export function useCvCompilation() {
   const abortController = useRef<AbortController | null>(null);
@@ -11,7 +15,18 @@ export function useCvCompilation() {
 
   useEffect(() => () => abortController.current?.abort(), []);
 
-  const compile = useCallback(async (documentVersionId: string) => {
+  const reset = useCallback(() => {
+    abortController.current?.abort();
+    abortController.current = null;
+    setPdfArtifactId(undefined);
+    setError(undefined);
+    setProgress(undefined);
+  }, []);
+
+  const compileVersion = useCallback(async (
+    documentVersionId: string,
+    isTemplate: boolean,
+  ) => {
     abortController.current?.abort();
     abortController.current = new AbortController();
     const { signal } = abortController.current;
@@ -21,7 +36,9 @@ export function useCvCompilation() {
     setProgress("Queued for compilation");
 
     try {
-      const createdJob = await createCvCompileJob(documentVersionId, signal);
+      const createdJob = isTemplate
+        ? await createTemplateCompileJob(documentVersionId, signal)
+        : await createCvCompileJob(documentVersionId, signal);
       const completedJob = await pollAsyncJob(createdJob, getCvCompileJob, {
         signal,
         onUpdate: (job) =>
@@ -41,11 +58,23 @@ export function useCvCompilation() {
     }
   }, []);
 
+  const compile = useCallback(
+    (documentVersionId: string) => compileVersion(documentVersionId, false),
+    [compileVersion],
+  );
+
+  const compileTemplate = useCallback(
+    (templateVersionId: string) => compileVersion(templateVersionId, true),
+    [compileVersion],
+  );
+
   return {
     pdfArtifactId,
     error,
     progress,
     isCompiling: progress === "Queued for compilation" || progress === "Compiling…",
     compile,
+    compileTemplate,
+    reset,
   };
 }

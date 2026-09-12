@@ -142,13 +142,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         });
         builder.Entity<CvCompileJob>(entity =>
         {
-            entity.ToTable("CompileJobs");
+            entity.ToTable("CompileJobs", table => table.HasCheckConstraint(
+                "CK_CompileJobs_ExactlyOneSource",
+                "(\"DocumentVersionId\" IS NOT NULL) <> (\"TemplateVersionId\" IS NOT NULL)"));
             entity.Property(job => job.GeneratedCvVersionId).HasColumnName("DocumentVersionId");
+            entity.Property(job => job.CvTemplateVersionId).HasColumnName("TemplateVersionId");
         });
         builder.Entity<PdfArtifact>(entity =>
         {
-            entity.ToTable("PdfArtifacts");
+            entity.ToTable("PdfArtifacts", table => table.HasCheckConstraint(
+                "CK_PdfArtifacts_ExactlyOneSource",
+                "(\"DocumentVersionId\" IS NOT NULL) <> (\"TemplateVersionId\" IS NOT NULL)"));
             entity.Property(artifact => artifact.GeneratedCvVersionId).HasColumnName("DocumentVersionId");
+            entity.Property(artifact => artifact.CvTemplateVersionId).HasColumnName("TemplateVersionId");
         });
     }
 }

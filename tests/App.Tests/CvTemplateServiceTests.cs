@@ -23,8 +23,10 @@ public sealed class CvTemplateServiceTests
         var result = await service.ListAsync("user:owner", CancellationToken.None);
 
         Assert.Equal(3, result.Count);
-        Assert.Equal(["example-1", "example-2", "example-3"], result.Select(item => item.Name));
+        Assert.Equal([".NET backend", "AI native", "Fullstack"], result.Select(item => item.Name));
         Assert.All(result, item => Assert.Equal(1, item.Version));
+        Assert.All(result, item => Assert.DoesNotContain("{{", item.Tex, StringComparison.Ordinal));
+        Assert.All(result, item => new TexSafetyValidator(200_000).Validate(item.Tex));
         Assert.Equal(3, await db.CvTemplates.CountAsync());
         Assert.Equal(3, await db.CvTemplateVersions.CountAsync());
     }

@@ -86,7 +86,8 @@ public static class DependencyInjection
             ConfigurationValues.GetPositiveInt(
                 configuration,
                 "Compilation:MaxTexBytes",
-                200_000)));
+                200_000),
+            configuration["Compilation:Executable"] ?? "tectonic"));
         services.AddSingleton<IArtifactStorage>(_ => new LocalArtifactStorage(
             configuration["Artifacts:Root"]));
 

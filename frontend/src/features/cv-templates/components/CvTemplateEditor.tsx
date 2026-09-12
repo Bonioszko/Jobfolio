@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { ErrorMessage } from "../../../components/common/ErrorMessage";
+import { getPdfDownloadUrl } from "../../cv-compilation/api/cvCompilationApi";
+import { useCvCompilation } from "../../cv-compilation/hooks/useCvCompilation";
 import type { CvTemplate, SaveCvTemplateInput } from "../types/cvTemplate";
 
 type CvTemplateEditorProps = {
@@ -10,6 +12,10 @@ type CvTemplateEditorProps = {
   templates: CvTemplate[];
 };
 
+const LatexSourceEditor = lazy(() =>
+  import("./LatexSourceEditor").then((module) => ({ default: module.LatexSourceEditor })),
+);
+
 export function CvTemplateEditor({
   error,
   isSaving,
@@ -17,10 +23,12 @@ export function CvTemplateEditor({
   onSaved,
   templates,
 }: CvTemplateEditorProps) {
+  const compilation = useCvCompilation();
   const [editingId, setEditingId] = useState("");
   const [name, setName] = useState("");
   const [tex, setTex] = useState("");
   const [validationError, setValidationError] = useState<string>();
+  const [hasOpened, setHasOpened] = useState(false);
 
   useEffect(() => {
     const selected = templates.find((template) => template.id === editingId);
@@ -37,7 +45,7 @@ export function CvTemplateEditor({
   const save = async () => {
     if (!name.trim() || !tex.trim()) {
       setValidationError("Enter a template name and paste a complete TeX document.");
-      return;
+      return undefined;
     }
 
     setValidationError(undefined);
@@ -46,10 +54,29 @@ export function CvTemplateEditor({
       setEditingId(saved.id);
       onSaved(saved);
     }
+    return saved;
+  };
+
+  const selectedTemplate = templates.find((template) => template.id === editingId);
+  const isDirty = !selectedTemplate ||
+    selectedTemplate.name !== name.trim() ||
+    selectedTemplate.tex !== tex;
+  const pdfUrl = compilation.pdfArtifactId
+    ? getPdfDownloadUrl(compilation.pdfArtifactId)
+    : undefined;
+
+  const compile = async () => {
+    const template = isDirty ? await save() : selectedTemplate;
+    if (template) await compilation.compileTemplate(template.versionId);
   };
 
   return (
-    <details className="template-editor">
+    <details
+      className="template-editor"
+      onToggle={(event) => {
+        if (event.currentTarget.open) setHasOpened(true);
+      }}
+    >
       <summary>
         <span>Add or edit a TeX CV template</span>
         <span aria-hidden="true">+</span>
@@ -57,7 +84,13 @@ export function CvTemplateEditor({
       <div className="template-editor__body">
         <label className="form-field">
           <span>Template to edit</span>
-          <select value={editingId} onChange={(event) => setEditingId(event.target.value)}>
+          <select
+            value={editingId}
+            onChange={(event) => {
+              compilation.reset();
+              setEditingId(event.target.value);
+            }}
+          >
             <option value="">Create a new template</option>
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
@@ -72,22 +105,55 @@ export function CvTemplateEditor({
             maxLength={120}
             placeholder="For example: Backend focused"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              compilation.reset();
+              setName(event.target.value);
+            }}
           />
         </label>
-        <label className="form-field">
+        <div className="form-field">
           <span className="field-label-row">
             <span>TeX source</span>
             <span>{editingId ? "Saves a new version" : "New template"}</span>
           </span>
-          <textarea
-            className="template-tex-input"
-            placeholder="Paste your complete \\documentclass… TeX CV here"
-            spellCheck={false}
-            value={tex}
-            onChange={(event) => setTex(event.target.value)}
-          />
-        </label>
+          <div className="template-tex-input">
+            {hasOpened && (
+              <Suspense fallback={<div className="template-editor-loading">Loading editor…</div>}>
+                <LatexSourceEditor
+                  value={tex}
+                  onChange={(value) => {
+                    compilation.reset();
+                    setTex(value);
+                  }}
+                />
+              </Suspense>
+            )}
+          </div>
+        </div>
+        <div className="template-compile-actions">
+          <button
+            className="secondary-action"
+            disabled={isSaving || compilation.isCompiling || !name.trim() || !tex.trim()}
+            onClick={() => void compile()}
+            type="button"
+          >
+            {compilation.isCompiling
+              ? "Compiling PDF…"
+              : isDirty
+                ? "Save and compile PDF"
+                : "Compile current version"}
+          </button>
+          {compilation.progress && <p className="progress">{compilation.progress}</p>}
+          <ErrorMessage message={compilation.error} />
+          {pdfUrl && (
+            <>
+              <iframe className="pdf-preview" title="Compiled CV preview" src={pdfUrl} />
+              <a className="download primary-action" href={pdfUrl}>
+                Download PDF
+              </a>
+            </>
+          )}
+        </div>
         <ErrorMessage message={validationError ?? error} />
         <button
           className="secondary-action template-save"

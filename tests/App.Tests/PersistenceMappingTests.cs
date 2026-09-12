@@ -50,6 +50,16 @@ public sealed class PersistenceMappingTests
             "CompileJobs",
             nameof(CvCompileJob.GeneratedCvVersionId),
             "DocumentVersionId");
+        AssertMapping<CvCompileJob>(
+            db,
+            "CompileJobs",
+            nameof(CvCompileJob.CvTemplateVersionId),
+            "TemplateVersionId");
+        AssertMapping<PdfArtifact>(
+            db,
+            "PdfArtifacts",
+            nameof(PdfArtifact.CvTemplateVersionId),
+            "TemplateVersionId");
     }
 
     private static void AssertMapping<TEntity>(

@@ -10,6 +10,12 @@ export function createCvCompileJob(documentVersionId: string, signal?: AbortSign
     .then(normalizeAsyncJob);
 }
 
+export function createTemplateCompileJob(templateVersionId: string, signal?: AbortSignal) {
+  return httpClient
+    .post<AsyncJobResponse>("/api/template-compile-jobs", { documentVersionId: templateVersionId }, { signal })
+    .then(normalizeAsyncJob);
+}
+
 export function getCvCompileJob(id: string, signal?: AbortSignal) {
   return httpClient
     .get<AsyncJobResponse>(`/api/compile-jobs/${id}`, { signal })

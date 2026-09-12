@@ -2,14 +2,22 @@ namespace App.Domain;
 
 public sealed class CvCompileJob : LeasedJob
 {
-    public Guid GeneratedCvVersionId { get; set; }
+    public Guid? GeneratedCvVersionId { get; set; }
+    public Guid? CvTemplateVersionId { get; set; }
     public Guid? PdfArtifactId { get; set; }
+
+    public bool HasExactlyOneSource =>
+        GeneratedCvVersionId.HasValue != CvTemplateVersionId.HasValue;
 }
 
 public sealed class PdfArtifact : WorkspaceOwnedEntity
 {
-    public Guid GeneratedCvVersionId { get; set; }
+    public Guid? GeneratedCvVersionId { get; set; }
+    public Guid? CvTemplateVersionId { get; set; }
     public required string ObjectKey { get; set; }
     public required string Sha256 { get; set; }
     public long Size { get; set; }
+
+    public bool HasExactlyOneSource =>
+        GeneratedCvVersionId.HasValue != CvTemplateVersionId.HasValue;
 }
