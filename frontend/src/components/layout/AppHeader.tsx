@@ -1,7 +1,7 @@
 import type { Session } from "../../features/auth/types/session";
 
 type AppHeaderProps = {
-  activePage: "jobs" | "interviews";
+  activePage: "jobs" | "kanban" | "interviews";
   googleSignInUrl: string;
   isLoggingOut: boolean;
   onLogout: () => Promise<void>;
@@ -32,6 +32,12 @@ export function AppHeader({
       <nav className="app-navigation" aria-label="Primary navigation">
         <a aria-current={activePage === "jobs" ? "page" : undefined} href="/">
           Jobs
+        </a>
+        <a
+          aria-current={activePage === "kanban" ? "page" : undefined}
+          href="/kanban"
+        >
+          Kanban
         </a>
         <a
           aria-current={activePage === "interviews" ? "page" : undefined}

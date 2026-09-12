@@ -7,6 +7,7 @@ import { DemoLanding } from "../features/demo/components/DemoLanding";
 import { useDomainConfig } from "../features/domain-config/hooks/useDomainConfig";
 import { JobPostingsPage } from "../features/job-postings/pages/JobPostingsPage";
 import { InterviewDashboardPage } from "../features/interview-dashboard/pages/InterviewDashboardPage";
+import { ApplicationKanbanPage } from "../features/application-kanban/pages/ApplicationKanbanPage";
 
 export function App() {
   const domainConfig = useDomainConfig();
@@ -42,6 +43,19 @@ export function App() {
   if (window.location.pathname === "/interviews") {
     return (
       <InterviewDashboardPage
+        authenticationError={session.error}
+        domain={domainConfig.data}
+        googleSignInUrl={googleSignInUrl}
+        isLoggingOut={session.isLoggingOut}
+        onLogout={session.logout}
+        session={session.session}
+      />
+    );
+  }
+
+  if (window.location.pathname === "/kanban") {
+    return (
+      <ApplicationKanbanPage
         authenticationError={session.error}
         domain={domainConfig.data}
         googleSignInUrl={googleSignInUrl}

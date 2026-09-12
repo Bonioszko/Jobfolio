@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage, isAbortError } from "../../../lib/errors/getErrorMessage";
 import { getAllJobPostings, updateJobPostingStatus } from "../api/jobPostingsApi";
 import type { JobPosting } from "../types/jobPosting";
+import { updateWorkflowStatus } from "../utils/updateWorkflowStatus";
 
 export function useJobPostings() {
   const [data, setData] = useState<JobPosting[]>([]);
@@ -30,11 +31,7 @@ export function useJobPostings() {
 
     try {
       await updateJobPostingStatus(id, status);
-      setData((current) =>
-        current.map((posting) =>
-          posting.id === id ? { ...posting, workflowStatus: status } : posting,
-        ),
-      );
+      setData((current) => updateWorkflowStatus(current, id, status));
       return true;
     } catch (requestError) {
       setError(getErrorMessage(requestError));
