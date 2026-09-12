@@ -16,6 +16,8 @@ user, deployment, and secret values from sources that are not committed.
 | Gmail OAuth secret and refresh tokens | .NET user secrets or an external client JSON file | Secret Manager | no |
 | Terraform input values | not required | ignored `terraform.tfvars` | no |
 | Terraform backend bucket | not required | ignored `backend.hcl` | no |
+| PDF artifact storage | ignored local `.artifacts` | private Cloud Storage bucket | no |
+| Compilation dispatch | PostgreSQL polling | Cloud Tasks | no |
 
 ASP.NET Core loads environment variables after `appsettings.json`, so local or
 Cloud Run values override the checked-in defaults. Terraform reads the ignored
@@ -183,6 +185,7 @@ GCP_ARTIFACT_REPOSITORY
 GCP_WORKLOAD_IDENTITY_PROVIDER
 GCP_DEPLOYER_SERVICE_ACCOUNT
 GCP_DEPLOY_ENABLED
+GCP_CV_COMPILATION_ENABLED
 ```
 
 Use `us-central1` for `GCP_REGION` and `jobparser-containers` for
@@ -196,6 +199,8 @@ terraform output -raw github_deployer_service_account
 
 Keep `GCP_DEPLOY_ENABLED` unset or set to `false` during bootstrap. Set it to
 `true` only after Terraform has created the runtime and deployment identity.
+Set `GCP_CV_COMPILATION_ENABLED` to `true` only after Terraform has created the
+compiler service and `cv_compilation_enabled` is true.
 
 The deployment workflow changes the Cloud Run image revision only. Terraform
 continues to own environment variables, Secret Manager references, networking,

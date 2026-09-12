@@ -91,6 +91,40 @@ public sealed class CvCompilationStore(AppDbContext db) : ICvCompilationStore
         return job;
     }
 
+    public async Task<CvCompilationClaimResult> ClaimAsync(
+        Guid cvCompileJobId,
+        DateTimeOffset now,
+        TimeSpan leaseDuration,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable,
+            cancellationToken);
+        var job = await db.CvCompileJobs.SingleOrDefaultAsync(
+            candidate => candidate.Id == cvCompileJobId,
+            cancellationToken);
+
+        if (job is null)
+        {
+            return new CvCompilationClaimResult(CvCompilationClaimOutcome.NotFound);
+        }
+
+        if (job.Status is JobStatus.Succeeded or JobStatus.Failed or JobStatus.TimedOut)
+        {
+            return new CvCompilationClaimResult(CvCompilationClaimOutcome.AlreadyTerminal);
+        }
+
+        if (job.Status == JobStatus.Running && job.LeaseUntil > now)
+        {
+            return new CvCompilationClaimResult(CvCompilationClaimOutcome.Deferred);
+        }
+
+        job.MarkClaimed(now, leaseDuration);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new CvCompilationClaimResult(CvCompilationClaimOutcome.Claimed, job);
+    }
+
     public async Task<string> GetTexAsync(
         CvCompileJob job,
         CancellationToken cancellationToken)

@@ -30,6 +30,22 @@ resource "google_service_account" "scheduler" {
   depends_on = [google_project_service.required["iam.googleapis.com"]]
 }
 
+resource "google_service_account" "compiler" {
+  project      = var.project_id
+  account_id   = "jobparser-compiler"
+  display_name = "Job Parser CV compiler"
+
+  depends_on = [google_project_service.required["iam.googleapis.com"]]
+}
+
+resource "google_service_account" "compilation_task_invoker" {
+  project      = var.project_id
+  account_id   = "jobparser-compile-invoker"
+  display_name = "Job Parser compilation task invoker"
+
+  depends_on = [google_project_service.required["iam.googleapis.com"]]
+}
+
 resource "google_secret_manager_secret_iam_member" "web_database_password" {
   project   = var.project_id
   secret_id = google_secret_manager_secret.postgres_password.secret_id
@@ -72,4 +88,45 @@ resource "google_secret_manager_secret_iam_member" "gmail_refresh_token" {
   secret_id = each.value.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.gmail_sync.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "compiler_database_password" {
+  project   = var.project_id
+  secret_id = google_secret_manager_secret.postgres_password.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.compiler.email}"
+}
+
+resource "google_storage_bucket_iam_member" "compiler_pdf_objects" {
+  count = var.cv_compilation_enabled ? 1 : 0
+
+  bucket = google_storage_bucket.pdf_artifacts[0].name
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${google_service_account.compiler.email}"
+}
+
+resource "google_storage_bucket_iam_member" "web_pdf_viewer" {
+  count = var.cv_compilation_enabled ? 1 : 0
+
+  bucket = google_storage_bucket.pdf_artifacts[0].name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.web.email}"
+}
+
+resource "google_service_account_iam_member" "web_use_compilation_task_invoker" {
+  count = var.cv_compilation_enabled ? 1 : 0
+
+  service_account_id = google_service_account.compilation_task_invoker.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.web.email}"
+}
+
+resource "google_service_account_iam_member" "cloud_tasks_mint_compilation_token" {
+  count = var.cv_compilation_enabled ? 1 : 0
+
+  service_account_id = google_service_account.compilation_task_invoker.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-cloudtasks.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.required["cloudtasks.googleapis.com"]]
 }

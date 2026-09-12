@@ -17,6 +17,7 @@ export type DomainConfig = {
   statuses: WorkflowStatus[];
   features: {
     cv: boolean;
+    cvGeneration: boolean;
     demo: boolean;
   };
 };

@@ -1,0 +1,47 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-build
+WORKDIR /source
+COPY Directory.Build.props JobParser.slnx NuGet.Config ./
+COPY src/ ./src/
+RUN dotnet restore src/App.CompilerWorker/App.CompilerWorker.csproj --configfile NuGet.Config
+RUN dotnet publish src/App.CompilerWorker/App.CompilerWorker.csproj \
+    --configuration Release \
+    --no-restore \
+    --output /publish/compiler-worker
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS tectonic-install
+ARG TECTONIC_VERSION=0.17.0
+ARG TECTONIC_SHA256=8533d07f9ccbd7a65824b9e0459041bca34af1eb33daba48f59215593753a3b7
+ENV TECTONIC_CACHE_DIR=/opt/tectonic-cache \
+    TECTONIC_UNTRUSTED_MODE=1
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl --fail --location --show-error \
+        --output /tmp/tectonic.tar.gz \
+        "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${TECTONIC_VERSION}/tectonic-${TECTONIC_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    && echo "${TECTONIC_SHA256}  /tmp/tectonic.tar.gz" | sha256sum --check \
+    && tar --extract --gzip --file /tmp/tectonic.tar.gz --directory /usr/local/bin tectonic \
+    && rm /tmp/tectonic.tar.gz
+COPY example-templates/ /tmp/example-templates/
+RUN mkdir --parents "${TECTONIC_CACHE_DIR}" /tmp/tectonic-output \
+    && for template in /tmp/example-templates/*.tex; do \
+         tectonic -X compile --untrusted --outdir /tmp/tectonic-output "${template}"; \
+       done \
+    && rm -rf /tmp/example-templates /tmp/tectonic-output
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app/compiler-worker
+ENV ASPNETCORE_HTTP_PORTS=8080 \
+    DOTNET_EnableDiagnostics=0 \
+    TECTONIC_CACHE_DIR=/opt/tectonic-cache \
+    TECTONIC_UNTRUSTED_MODE=1
+COPY --from=dotnet-build /publish/compiler-worker/ /app/compiler-worker/
+COPY --from=tectonic-install /usr/local/bin/tectonic /usr/local/bin/tectonic
+COPY --from=tectonic-install /opt/tectonic-cache/ /opt/tectonic-cache/
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends fontconfig \
+    && rm -rf /var/lib/apt/lists/* \
+    && chown --recursive "${APP_UID}:${APP_UID}" /app/compiler-worker /opt/tectonic-cache
+USER $APP_UID
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "/app/compiler-worker/App.CompilerWorker.dll"]

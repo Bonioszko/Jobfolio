@@ -119,9 +119,12 @@ Do not add RabbitMQ/Redis merely to emulate future infrastructure.
 
 ---
 
-## Future queue adapter
+## Google Cloud queue adapter
 
-Future GCP deployment may use Google Cloud Tasks.
+The personal GCP deployment uses Google Cloud Tasks for CV compilation when the
+feature is enabled. The queue sends an authenticated HTTP request containing the
+compile job ID to the private compiler service. Generation still uses the local
+PostgreSQL adapter until its cloud worker is implemented.
 
 Application code continues to depend on:
 

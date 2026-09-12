@@ -88,6 +88,23 @@ variable "application_image" {
   }
 }
 
+variable "cv_compilation_enabled" {
+  description = "Enables CV APIs, Cloud Tasks dispatch, private PDF storage, and the scale-to-zero compiler service."
+  type        = bool
+  default     = false
+}
+
+variable "compiler_image" {
+  description = "Immutable linux/amd64 compiler-worker image reference in Artifact Registry, including its sha256 digest."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.compiler_image == "" || can(regex("^[a-z0-9.-]+/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$", var.compiler_image))
+    error_message = "compiler_image must be empty or an Artifact Registry image pinned by sha256 digest."
+  }
+}
+
 variable "application_base_url" {
   description = "Public HTTPS URL of the Cloud Run web service, used as the post-login redirect."
   type        = string

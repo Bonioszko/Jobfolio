@@ -53,6 +53,16 @@ output "web_service_url" {
   value       = try(google_cloud_run_v2_service.web[0].uri, null)
 }
 
+output "compiler_service_url" {
+  description = "Internal Cloud Run URL targeted by the CV compilation queue."
+  value       = try(google_cloud_run_v2_service.compiler[0].uri, null)
+}
+
+output "pdf_artifact_bucket" {
+  description = "Private bucket containing compiled CV PDFs."
+  value       = try(google_storage_bucket.pdf_artifacts[0].name, null)
+}
+
 output "application_secret_ids" {
   description = "Secret containers that require operator-managed values before enabling the application runtime."
   value = merge(

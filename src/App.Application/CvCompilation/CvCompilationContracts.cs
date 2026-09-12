@@ -39,6 +39,18 @@ public interface ICvCompilationQueue
 public interface ICvCompilationJobProcessor
 {
     Task<bool> ProcessNextAsync(CancellationToken cancellationToken);
+
+    Task<CvCompilationProcessingOutcome> ProcessAsync(
+        Guid cvCompileJobId,
+        CancellationToken cancellationToken);
+}
+
+public enum CvCompilationProcessingOutcome
+{
+    Processed,
+    AlreadyTerminal,
+    Deferred,
+    NotFound
 }
 
 public interface ITexCompiler
@@ -104,6 +116,11 @@ public interface ICvCompilationStore
         DateTimeOffset now,
         TimeSpan leaseDuration,
         CancellationToken cancellationToken);
+    Task<CvCompilationClaimResult> ClaimAsync(
+        Guid cvCompileJobId,
+        DateTimeOffset now,
+        TimeSpan leaseDuration,
+        CancellationToken cancellationToken);
     Task<string> GetTexAsync(CvCompileJob job, CancellationToken cancellationToken);
     Task CompleteAsync(
         CvCompileJob job,
@@ -112,6 +129,18 @@ public interface ICvCompilationStore
         CancellationToken cancellationToken);
     Task SaveAsync(CvCompileJob job, CancellationToken cancellationToken);
 }
+
+public enum CvCompilationClaimOutcome
+{
+    Claimed,
+    AlreadyTerminal,
+    Deferred,
+    NotFound
+}
+
+public sealed record CvCompilationClaimResult(
+    CvCompilationClaimOutcome Outcome,
+    CvCompileJob? Job = null);
 
 public sealed class TexCompilationTimeoutException(string message, Exception? innerException = null)
     : Exception(message, innerException);

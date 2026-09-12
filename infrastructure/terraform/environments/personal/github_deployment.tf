@@ -67,6 +67,7 @@ resource "google_service_account_iam_member" "github_act_as_runtime" {
     web               = google_service_account.web.name
     gmail-sync        = google_service_account.gmail_sync.name
     database-migrator = google_service_account.database_migrator.name
+    compiler          = google_service_account.compiler.name
   }
 
   service_account_id = each.value

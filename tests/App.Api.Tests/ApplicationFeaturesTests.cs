@@ -13,6 +13,7 @@ public sealed class ApplicationFeaturesTests
         var features = ApplicationFeatures.FromConfiguration(configuration);
 
         Assert.True(features.CvEnabled);
+        Assert.True(features.CvGenerationEnabled);
         Assert.True(features.DemoEnabled);
     }
 
@@ -23,12 +24,14 @@ public sealed class ApplicationFeaturesTests
             new Dictionary<string, string?>
             {
                 ["Features:CvEnabled"] = "false",
+                ["Features:CvGenerationEnabled"] = "false",
                 ["Features:DemoEnabled"] = "false"
             }).Build();
 
         var features = ApplicationFeatures.FromConfiguration(configuration);
 
         Assert.False(features.CvEnabled);
+        Assert.False(features.CvGenerationEnabled);
         Assert.False(features.DemoEnabled);
     }
 }

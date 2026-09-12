@@ -29,10 +29,13 @@ public static class EndpointRouteBuilderExtensions
         {
             authenticated.MapCvTemplateEndpoints();
             authenticated.MapCandidateRuleEndpoints();
-            authenticated.MapCvGenerationEndpoints();
-            authenticated.MapGeneratedCvEndpoints();
             authenticated.MapCvCompilationEndpoints();
             authenticated.MapArtifactEndpoints();
+            if (features.CvGenerationEnabled)
+            {
+                authenticated.MapCvGenerationEndpoints();
+                authenticated.MapGeneratedCvEndpoints();
+            }
         }
 
         return endpoints;

@@ -94,7 +94,7 @@ export function JobPostingsPage({
           />
         )}
         <JobPostingDetailsPanel
-          cvEnabled={domain.features.cv}
+          cvGenerationEnabled={domain.features.cvGeneration}
           documentName={domain.generatedDocument.singular}
           fields={domain.fields}
           isStatusUpdating={Boolean(

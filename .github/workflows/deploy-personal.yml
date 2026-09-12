@@ -19,6 +19,7 @@ env:
   REGION: ${{ vars.GCP_REGION || 'us-central1' }}
   REPOSITORY: ${{ vars.GCP_ARTIFACT_REPOSITORY || 'jobparser-containers' }}
   IMAGE_NAME: application
+  CV_COMPILATION_ENABLED: ${{ vars.GCP_CV_COMPILATION_ENABLED || 'false' }}
 
 jobs:
   deploy:
@@ -76,6 +77,23 @@ jobs:
           test -n "${digest}"
           echo "reference=${image}@${digest}" >> "${GITHUB_OUTPUT}"
 
+      - name: Build and push compiler image
+        if: env.CV_COMPILATION_ENABLED == 'true'
+        id: compiler-image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/compiler"
+          docker build \
+            --platform linux/amd64 \
+            --file Dockerfile.compiler \
+            --tag "${image}:${GITHUB_SHA}" \
+            .
+          docker push "${image}:${GITHUB_SHA}"
+          digest="$(gcloud artifacts docker images describe "${image}:${GITHUB_SHA}" --format='value(image_summary.digest)')"
+          test -n "${digest}"
+          echo "reference=${image}@${digest}" >> "${GITHUB_OUTPUT}"
+
       - name: Run database migrations
         run: |
           gcloud run jobs update jobparser-db-migrate \
@@ -105,6 +123,15 @@ jobs:
             --region="${REGION}" \
             --filter='metadata.labels.component=gmail-sync' \
             --format='value(metadata.name)')
+
+      - name: Deploy compiler worker
+        if: env.CV_COMPILATION_ENABLED == 'true'
+        run: |
+          gcloud run services update jobparser-compiler \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --image="${{ steps.compiler-image.outputs.reference }}" \
+            --quiet
 
       - name: Deploy web application
         run: |

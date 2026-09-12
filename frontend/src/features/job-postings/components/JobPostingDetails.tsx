@@ -20,7 +20,7 @@ import {
 import { JobStatusActions } from "./JobStatusActions";
 
 type JobPostingDetailsProps = {
-  cvEnabled: boolean;
+  cvGenerationEnabled: boolean;
   documentName: string;
   fields: DomainField[];
   isStatusUpdating: boolean;
@@ -39,7 +39,7 @@ type JobPostingDetailsProps = {
 };
 
 export function JobPostingDetails({
-  cvEnabled,
+  cvGenerationEnabled,
   documentName,
   fields,
   isStatusUpdating,
@@ -163,7 +163,7 @@ export function JobPostingDetails({
       </section>
       <InterviewNotesPanel jobPostingId={posting.id} />
 
-      {cvEnabled && (
+      {cvGenerationEnabled && (
         <CvTailoringPanel
           documentName={documentName}
           isLoadingResources={isTailoringDataLoading}

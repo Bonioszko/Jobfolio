@@ -6,7 +6,7 @@ import { useJobPosting } from "../hooks/useJobPosting";
 import { JobPostingDetails } from "./JobPostingDetails";
 
 type JobPostingDetailsPanelProps = {
-  cvEnabled: boolean;
+  cvGenerationEnabled: boolean;
   documentName: string;
   fields: DomainField[];
   isStatusUpdating: boolean;
@@ -24,7 +24,7 @@ type JobPostingDetailsPanelProps = {
 };
 
 export function JobPostingDetailsPanel({
-  cvEnabled,
+  cvGenerationEnabled,
   documentName,
   fields,
   isStatusUpdating,
@@ -62,7 +62,7 @@ export function JobPostingDetailsPanel({
       {posting.data && (
         <JobPostingDetails
           key={posting.data.id}
-          cvEnabled={cvEnabled}
+          cvGenerationEnabled={cvGenerationEnabled}
           documentName={documentName}
           fields={fields}
           isStatusUpdating={isStatusUpdating}

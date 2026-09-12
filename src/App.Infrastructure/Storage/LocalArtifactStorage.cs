@@ -26,8 +26,8 @@ public sealed class LocalArtifactStorage : IArtifactStorage
         ArgumentException.ThrowIfNullOrWhiteSpace(workspaceKey);
         ArgumentNullException.ThrowIfNull(data);
 
-        var workspaceDirectory = GetWorkspaceDirectoryName(workspaceKey);
-        var key = Path.Combine(workspaceDirectory, $"{artifactId:N}.pdf");
+        var key = ArtifactObjectKey.Create(workspaceKey, artifactId)
+            .Replace('/', Path.DirectorySeparatorChar);
         var fullPath = ResolvePath(key);
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
@@ -72,7 +72,7 @@ public sealed class LocalArtifactStorage : IArtifactStorage
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workspaceKey);
         cancellationToken.ThrowIfCancellationRequested();
-        var directory = ResolvePath(GetWorkspaceDirectoryName(workspaceKey));
+        var directory = ResolvePath(ArtifactObjectKey.GetWorkspacePrefix(workspaceKey));
         if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
         return Task.CompletedTask;
     }
@@ -107,22 +107,4 @@ public sealed class LocalArtifactStorage : IArtifactStorage
             Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant(),
             data.LongLength);
 
-    private static string GetWorkspaceDirectoryName(string workspaceKey)
-    {
-        if (workspaceKey.StartsWith("demo:", StringComparison.Ordinal) &&
-            Guid.TryParse(workspaceKey["demo:".Length..], out _))
-        {
-            return workspaceKey.Replace(':', '-');
-        }
-
-        if (workspaceKey.StartsWith("user:", StringComparison.Ordinal))
-        {
-            var userId = workspaceKey["user:".Length..];
-            var isSafe = userId.Length is > 0 and <= 200 && userId.All(character =>
-                char.IsLetterOrDigit(character) || character is '.' or '_' or '@' or '+' or '-');
-            if (isSafe) return workspaceKey.Replace(':', '-');
-        }
-
-        throw new InvalidOperationException("The workspace key cannot be mapped to artifact storage.");
-    }
 }

@@ -2,6 +2,8 @@ using App.Application;
 using App.Parsers;
 using App.Parsers.Sources;
 using System.Net;
+using Google.Cloud.Storage.V1;
+using Google.Cloud.Tasks.V2;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,7 +64,7 @@ public static class DependencyInjection
         services.AddTransient<IJobPostingDetailsEnricher, JobPostingDetailsEnricher>();
 
         services.AddSingleton<ICvGenerationQueue, PostgresCvGenerationQueue>();
-        services.AddSingleton<ICvCompilationQueue, PostgresCvCompilationQueue>();
+        AddCvCompilationQueue(services, configuration);
         services.AddSingleton<ISourceParser, LinkedInJobParser>();
         services.AddSingleton<ISourceParser, JustJoinItJobParser>();
         services.AddSingleton<ISourceParser, NoFluffJobsParser>();
@@ -88,10 +90,55 @@ public static class DependencyInjection
                 "Compilation:MaxTexBytes",
                 200_000),
             configuration["Compilation:Executable"] ?? "tectonic"));
-        services.AddSingleton<IArtifactStorage>(_ => new LocalArtifactStorage(
-            configuration["Artifacts:Root"]));
+        AddArtifactStorage(services, configuration);
 
         return services;
+    }
+
+    private static void AddCvCompilationQueue(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var provider = configuration["Queues:CvCompilation:Provider"] ?? "Postgres";
+        if (provider.Equals("Postgres", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<ICvCompilationQueue, PostgresCvCompilationQueue>();
+            return;
+        }
+
+        if (!provider.Equals("CloudTasks", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Queues:CvCompilation:Provider must be 'Postgres' or 'CloudTasks'.");
+        }
+
+        services.AddSingleton(
+            CloudTasksCvCompilationQueueOptions.FromConfiguration(configuration));
+        services.AddSingleton(_ => CloudTasksClient.Create());
+        services.AddSingleton<ICvCompilationQueue, CloudTasksCvCompilationQueue>();
+    }
+
+    private static void AddArtifactStorage(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var provider = configuration["Artifacts:Provider"] ?? "Local";
+        if (provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IArtifactStorage>(_ => new LocalArtifactStorage(
+                configuration["Artifacts:Root"]));
+            return;
+        }
+
+        if (!provider.Equals("GoogleCloud", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Artifacts:Provider must be 'Local' or 'GoogleCloud'.");
+        }
+
+        services.AddSingleton(GoogleCloudArtifactStorageOptions.FromConfiguration(configuration));
+        services.AddSingleton(_ => StorageClient.Create());
+        services.AddSingleton<IArtifactStorage, GoogleCloudArtifactStorage>();
     }
 
     public static IServiceCollection AddPersistenceInfrastructure(

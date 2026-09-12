@@ -2,6 +2,7 @@ locals {
   required_services = toset([
     "artifactregistry.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "cloudtasks.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "iamcredentials.googleapis.com",
     "compute.googleapis.com",
@@ -39,4 +40,6 @@ locals {
       workspace_id = workspace_id
     }
   ]
+
+  cv_compilation_runtime_enabled = var.application_runtime_enabled && var.cv_compilation_enabled
 }

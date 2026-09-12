@@ -23,6 +23,7 @@ public static class DomainConfigurationEndpoints
                     Features = new
                     {
                         Cv = features.CvEnabled,
+                        CvGeneration = features.CvGenerationEnabled,
                         Demo = features.DemoEnabled
                     }
                 });

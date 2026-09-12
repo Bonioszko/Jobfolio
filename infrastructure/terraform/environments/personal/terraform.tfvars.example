@@ -12,6 +12,11 @@ database_vm_enabled = false
 application_runtime_enabled = false
 application_image           = ""
 
+# Enable only after the compiler image has been built and its immutable digest
+# has been assigned below.
+cv_compilation_enabled = false
+compiler_image         = ""
+
 # Enable after the first Cloud Run service exists and its HTTPS URL has been
 # registered in a Google Web OAuth client as /signin-google.
 application_base_url             = ""

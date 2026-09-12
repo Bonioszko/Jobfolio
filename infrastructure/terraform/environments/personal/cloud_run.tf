@@ -6,6 +6,18 @@ locals {
     "Database__Username"        = "jobparser"
     "Database__MaximumPoolSize" = "5"
   }
+
+  cloud_run_cv_environment = local.cv_compilation_runtime_enabled ? {
+    "Artifacts__Provider"                            = "GoogleCloud"
+    "Artifacts__Bucket"                              = google_storage_bucket.pdf_artifacts[0].name
+    "Queues__CvCompilation__Provider"                = "CloudTasks"
+    "Queues__CvCompilation__ProjectId"               = var.project_id
+    "Queues__CvCompilation__Location"                = var.region
+    "Queues__CvCompilation__QueueId"                 = google_cloud_tasks_queue.cv_compilation[0].name
+    "Queues__CvCompilation__TargetUrl"               = "${google_cloud_run_v2_service.compiler[0].uri}/internal/cv-compilation-jobs"
+    "Queues__CvCompilation__OidcServiceAccountEmail" = google_service_account.compilation_task_invoker.email
+    "Queues__CvCompilation__OidcAudience"            = google_cloud_run_v2_service.compiler[0].uri
+  } : {}
 }
 
 resource "google_cloud_run_v2_service" "web" {
@@ -94,6 +106,11 @@ resource "google_cloud_run_v2_service" "web" {
 
       env {
         name  = "Features__CvEnabled"
+        value = tostring(local.cv_compilation_runtime_enabled)
+      }
+
+      env {
+        name  = "Features__CvGenerationEnabled"
         value = "false"
       }
 
@@ -119,6 +136,15 @@ resource "google_cloud_run_v2_service" "web" {
 
       dynamic "env" {
         for_each = local.cloud_run_database_environment
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+
+
+      dynamic "env" {
+        for_each = local.cloud_run_cv_environment
         content {
           name  = env.key
           value = env.value

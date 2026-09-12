@@ -192,17 +192,24 @@ Commit `.terraform.lock.hcl` so provider selections remain reproducible.
 
 ## Low-cost Cloud Run application
 
-The first cloud runtime intentionally excludes CV generation and compilation.
-One approximately 110 MB `linux/amd64` image contains three entry points:
+The base cloud runtime keeps CV functionality disabled. PDF compilation can be
+enabled independently from AI tailoring after its compiler image is bootstrapped.
+One approximately 110 MB `linux/amd64` application image contains three entry points:
 
 - `/app/api/App.Api.dll` for the React SPA and ASP.NET API;
 - `/app/database-migrator/App.DatabaseMigrator.dll` for EF migrations;
 - `/app/gmail-sync/App.GmailSync.dll` for scheduled one-shot imports.
 
 Cloud Run uses request-based billing, zero minimum instances, one maximum web
-instance, 512 MiB RAM, and Direct VPC egress. Public demo and CV endpoints are
+instance, 512 MiB RAM, and Direct VPC egress. Public demo and AI generation are
 disabled in this profile. Gmail jobs run on the configured schedule and exit
 after one synchronization pass.
+
+When `cv_compilation_enabled` is true, a separate compiler image runs as an
+internal-only Cloud Run service with zero minimum instances and concurrency one.
+Cloud Tasks invokes it with an OIDC token and a job-ID-only payload. Tectonic runs
+as a non-root user in untrusted, cached-only mode, and PDFs are stored in a
+private Cloud Storage bucket.
 
 ### Bootstrap order
 
@@ -251,6 +258,27 @@ after one synchronization pass.
    corresponding `gmail_sync_accounts` entry and apply. Secret values are never
    Terraform variables and never enter Terraform state.
 
+### Enable PDF compilation
+
+Build and push the initial compiler image from the repository root:
+
+```bash
+docker buildx build \
+  --platform linux/amd64 \
+  --file Dockerfile.compiler \
+  --push \
+  --tag "${JOBPARSER_GCP_REGION}-docker.pkg.dev/${JOBPARSER_GCP_PROJECT_ID}/jobparser-containers/compiler:bootstrap" \
+  .
+gcloud artifacts docker images describe \
+  "${JOBPARSER_GCP_REGION}-docker.pkg.dev/${JOBPARSER_GCP_PROJECT_ID}/jobparser-containers/compiler:bootstrap" \
+  --format='value(image_summary.digest)'
+```
+
+Set `compiler_image` to the returned digest-pinned reference and set
+`cv_compilation_enabled = true`. Review `terraform plan` before applying. This
+creates the private artifact bucket, compiler identity and service, one-at-a-time
+Cloud Tasks queue, and least-privilege IAM. AI tailoring remains disabled.
+
 ### Automatic deployment
 
 Terraform creates a Workload Identity Federation provider and a deployment
@@ -264,10 +292,12 @@ GCP_ARTIFACT_REPOSITORY         = jobparser-containers
 GCP_WORKLOAD_IDENTITY_PROVIDER = terraform output -raw github_workload_identity_provider
 GCP_DEPLOYER_SERVICE_ACCOUNT   = terraform output -raw github_deployer_service_account
 GCP_DEPLOY_ENABLED             = true
+GCP_CV_COMPILATION_ENABLED     = true
 ```
 
 Before `GCP_DEPLOY_ENABLED` is set, the deployment workflow safely remains
 skipped. Afterwards, every push to `main` runs backend and frontend checks,
-builds and pushes a digest-pinned image, runs the migration job, updates Gmail
-jobs, deploys the web revision, and verifies `/api/health`. Terraform continues
-to own service configuration while the workflow owns container-image revisions.
+builds and pushes digest-pinned images, runs the migration job, updates Gmail
+jobs, deploys the compiler revision when enabled, deploys the web revision, and
+verifies `/api/health`. Terraform continues to own service configuration while
+the workflow owns container-image revisions.
