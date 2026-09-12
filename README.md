@@ -23,6 +23,17 @@ docker compose up -d postgres
 
 ## Run the backend
 
+To start PostgreSQL, apply migrations, install dependencies, and run the API,
+compiler worker, and frontend together:
+
+```bash
+./scripts/run-local.sh
+```
+
+Open `http://localhost:5173` and press `Ctrl+C` to stop the application processes.
+
+To run the processes separately instead:
+
 ```powershell
 dotnet restore --configfile NuGet.Config
 dotnet run --project src/App.Api
