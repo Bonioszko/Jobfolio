@@ -12,7 +12,11 @@ import type {
 import { InterviewNotesPanel } from "../../interview-notes/components/InterviewNotesPanel";
 import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
-import { matchesUnmodifiedShortcut } from "../utils/keyboardShortcut";
+import {
+  matchesPrimaryShortcut,
+  primaryShortcutAriaLabel,
+  primaryShortcutLabel,
+} from "../utils/keyboardShortcut";
 import { JobStatusActions } from "./JobStatusActions";
 
 type JobPostingDetailsProps = {
@@ -65,7 +69,7 @@ export function JobPostingDetails({
     if (!originalPostingUrl) return;
 
     const openOriginalPosting = (event: KeyboardEvent) => {
-      if (!matchesUnmodifiedShortcut(event, "w")) {
+      if (!matchesPrimaryShortcut(event, "w")) {
         return;
       }
 
@@ -83,7 +87,7 @@ export function JobPostingDetails({
         <div className="detail-hero__topline">
           {originalPostingUrl && (
             <a
-              aria-keyshortcuts="W"
+              aria-keyshortcuts={primaryShortcutAriaLabel("W")}
               className="external-link"
               href={originalPostingUrl}
               ref={originalPostingLink}
@@ -91,7 +95,7 @@ export function JobPostingDetails({
               target="_blank"
             >
               <span>View original posting</span>
-              <kbd className="shortcut-key">W</kbd>
+              <kbd className="shortcut-key">{primaryShortcutLabel("W")}</kbd>
               <span aria-hidden="true">↗</span>
             </a>
           )}

@@ -1,14 +1,27 @@
-export function matchesUnmodifiedShortcut(event: KeyboardEvent, key: string) {
+export function matchesPrimaryShortcut(event: KeyboardEvent, key: string) {
   return !event.defaultPrevented &&
     !event.repeat &&
-    !event.ctrlKey &&
     !event.altKey &&
-    !event.metaKey &&
+    !event.shiftKey &&
+    (event.metaKey || event.ctrlKey) &&
     event.key.toLowerCase() === key.toLowerCase() &&
     !isEditableTarget(event.target);
 }
 
+export function primaryShortcutLabel(key: string) {
+  const isApplePlatform = typeof navigator !== "undefined" &&
+    /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
+  return isApplePlatform ? `⌘${key}` : `Ctrl+${key}`;
+}
+
+export function primaryShortcutAriaLabel(key: string) {
+  return `Meta+${key} Control+${key}`;
+}
+
 function isEditableTarget(target: EventTarget | null) {
-  return target instanceof HTMLElement &&
-    (target.isContentEditable || ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName));
+  const element = target as (EventTarget & { closest?: (selector: string) => Element | null }) | null;
+  return typeof element?.closest === "function" &&
+    element.closest(
+      "input, select, textarea, [contenteditable='true'], [role='textbox'], .monaco-editor",
+    ) !== null;
 }

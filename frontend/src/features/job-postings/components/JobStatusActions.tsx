@@ -1,6 +1,10 @@
 import { useEffect } from "react";
 import type { WorkflowStatus } from "../../domain-config/types/domainConfig";
-import { matchesUnmodifiedShortcut } from "../utils/keyboardShortcut";
+import {
+  matchesPrimaryShortcut,
+  primaryShortcutAriaLabel,
+  primaryShortcutLabel,
+} from "../utils/keyboardShortcut";
 import { statusTone } from "../utils/statusPresentation";
 
 const statusShortcuts: Readonly<Record<string, string>> = {
@@ -24,7 +28,7 @@ export function JobStatusActions({
   useEffect(() => {
     const changeStatus = (event: KeyboardEvent) => {
       const shortcut = Object.values(statusShortcuts).find((key) =>
-        matchesUnmodifiedShortcut(event, key));
+        matchesPrimaryShortcut(event, key));
       if (!shortcut || isUpdating) return;
 
       const statusCode = Object.entries(statusShortcuts).find(
@@ -57,7 +61,7 @@ export function JobStatusActions({
 
           return (
             <button
-              aria-keyshortcuts={shortcut}
+              aria-keyshortcuts={shortcut ? primaryShortcutAriaLabel(shortcut) : undefined}
               aria-pressed={isCurrent}
               className="status-action"
               data-tone={statusTone(status.code)}
@@ -68,7 +72,9 @@ export function JobStatusActions({
             >
               <span className="status-action__dot" aria-hidden="true" />
               {status.label}
-              {shortcut && <kbd className="shortcut-key">{shortcut}</kbd>}
+              {shortcut && (
+                <kbd className="shortcut-key">{primaryShortcutLabel(shortcut)}</kbd>
+              )}
             </button>
           );
         })}
