@@ -3,6 +3,7 @@ import { ErrorMessage } from "../../../components/common/ErrorMessage";
 import { getPdfDownloadUrl } from "../../cv-compilation/api/cvCompilationApi";
 import { useCvCompilation } from "../../cv-compilation/hooks/useCvCompilation";
 import type { CvTemplate, SaveCvTemplateInput } from "../types/cvTemplate";
+import { getLatexSupportError } from "../utils/latexPackageSupport";
 
 type CvTemplateEditorProps = {
   error?: string;
@@ -45,6 +46,12 @@ export function CvTemplateEditor({
   const save = async () => {
     if (!name.trim() || !tex.trim()) {
       setValidationError("Enter a template name and paste a complete TeX document.");
+      return undefined;
+    }
+
+    const latexSupportError = getLatexSupportError(tex);
+    if (latexSupportError) {
+      setValidationError(latexSupportError);
       return undefined;
     }
 

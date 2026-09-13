@@ -191,6 +191,12 @@ Bake required dependencies into the compiler image.
 
 Do not download arbitrary TeX packages during compilation.
 
+The compiler image builds `infrastructure/compiler/tectonic-cache-primer.tex`
+with network access and then verifies the same document with `--only-cached`.
+Keep its package set aligned with the frontend's supported-package validation.
+The frontend also rejects pdfTeX-only glyph-mapping directives that cannot run
+under Tectonic's XeTeX engine.
+
 ---
 
 ## Compiler worker permissions

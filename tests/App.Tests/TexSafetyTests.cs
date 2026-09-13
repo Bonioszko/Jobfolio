@@ -4,23 +4,9 @@ namespace App.Tests;
 
 public sealed class TexSafetyTests
 {
-    [Fact]
-    public void Glyphtounicode_input_is_allowed()
-    {
-        const string tex = """
-            \documentclass{article}
-            \input{glyphtounicode}
-            \pdfgentounicode=1
-            \begin{document}
-            CV
-            \end{document}
-            """;
-
-        TexSafety.Validate(tex);
-    }
-
     [Theory]
     [InlineData(@"\write18{calc}")]
+    [InlineData(@"\input{glyphtounicode}")]
     [InlineData(@"\input{../secret}")]
     [InlineData(@"\input{glyphtounicode-malicious}")]
     [InlineData(@"\input{glyphtounicode}\input{secret}")]

@@ -23,11 +23,14 @@ RUN apt-get update \
     && tar --extract --gzip --file /tmp/tectonic.tar.gz --directory /usr/local/bin tectonic \
     && rm /tmp/tectonic.tar.gz
 COPY example-templates/ /tmp/example-templates/
+COPY infrastructure/compiler/tectonic-cache-primer.tex /tmp/tectonic-cache-primer.tex
 RUN mkdir --parents "${TECTONIC_CACHE_DIR}" /tmp/tectonic-output \
     && for template in /tmp/example-templates/*.tex; do \
          tectonic -X compile --untrusted --outdir /tmp/tectonic-output "${template}"; \
        done \
-    && rm -rf /tmp/example-templates /tmp/tectonic-output
+    && tectonic -X compile --untrusted --outdir /tmp/tectonic-output /tmp/tectonic-cache-primer.tex \
+    && tectonic -X compile --untrusted --only-cached --outdir /tmp/tectonic-output /tmp/tectonic-cache-primer.tex \
+    && rm -rf /tmp/example-templates /tmp/tectonic-cache-primer.tex /tmp/tectonic-output
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app/compiler-worker
