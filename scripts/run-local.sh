@@ -21,6 +21,9 @@ dotnet run --project src/App.DatabaseMigrator --no-restore
 dotnet run --project src/App.Api --launch-profile http &
 api_pid=$!
 
+dotnet run --project src/App.AiWorker &
+ai_worker_pid=$!
+
 dotnet run --project src/App.CompilerWorker &
 compiler_pid=$!
 
@@ -29,13 +32,13 @@ frontend_pid=$!
 
 cleanup() {
   trap - EXIT INT TERM
-  kill "$api_pid" "$compiler_pid" "$frontend_pid" 2>/dev/null || true
-  wait "$api_pid" "$compiler_pid" "$frontend_pid" 2>/dev/null || true
+  kill "$api_pid" "$ai_worker_pid" "$compiler_pid" "$frontend_pid" 2>/dev/null || true
+  wait "$api_pid" "$ai_worker_pid" "$compiler_pid" "$frontend_pid" 2>/dev/null || true
 }
 
 trap cleanup EXIT INT TERM
 
 echo "Local app starting at http://localhost:5173"
-echo "Press Ctrl+C to stop the API, compiler worker, and frontend."
+echo "Press Ctrl+C to stop the API, AI worker, compiler worker, and frontend."
 
 wait

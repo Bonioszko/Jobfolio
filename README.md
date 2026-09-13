@@ -24,7 +24,7 @@ docker compose up -d postgres
 ## Run the backend
 
 To start PostgreSQL, apply migrations, install dependencies, and run the API,
-compiler worker, and frontend together:
+AI worker, compiler worker, and frontend together:
 
 ```bash
 ./scripts/run-local.sh
