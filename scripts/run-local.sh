@@ -41,4 +41,22 @@ trap cleanup EXIT INT TERM
 echo "Local app starting at http://localhost:5173"
 echo "Press Ctrl+C to stop the API, AI worker, compiler worker, and frontend."
 
-wait
+process_names=("API" "AI worker" "compiler worker" "frontend")
+process_ids=("$api_pid" "$ai_worker_pid" "$compiler_pid" "$frontend_pid")
+
+while true; do
+  for index in "${!process_ids[@]}"; do
+    process_id="${process_ids[$index]}"
+    if ! kill -0 "$process_id" 2>/dev/null; then
+      process_status=0
+      wait "$process_id" || process_status=$?
+      echo "${process_names[$index]} stopped unexpectedly (exit $process_status)."
+      if [[ "$process_status" -eq 0 ]]; then
+        process_status=1
+      fi
+      exit "$process_status"
+    fi
+  done
+
+  sleep 1
+done
