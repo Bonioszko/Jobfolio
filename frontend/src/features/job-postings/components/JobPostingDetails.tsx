@@ -14,6 +14,7 @@ import type { JobPosting } from "../types/jobPosting";
 import { displayValue } from "../utils/displayValue";
 import {
   matchesPrimaryShortcut,
+  OPEN_JOB_POST_SHORTCUT,
   primaryShortcutAriaLabel,
   primaryShortcutLabel,
 } from "../utils/keyboardShortcut";
@@ -69,7 +70,7 @@ export function JobPostingDetails({
     if (!originalPostingUrl) return;
 
     const openOriginalPosting = (event: KeyboardEvent) => {
-      if (!matchesPrimaryShortcut(event, "w")) {
+      if (!matchesPrimaryShortcut(event, OPEN_JOB_POST_SHORTCUT)) {
         return;
       }
 
@@ -87,7 +88,7 @@ export function JobPostingDetails({
         <div className="detail-hero__topline">
           {originalPostingUrl && (
             <a
-              aria-keyshortcuts={primaryShortcutAriaLabel("W")}
+              aria-keyshortcuts={primaryShortcutAriaLabel(OPEN_JOB_POST_SHORTCUT)}
               className="external-link"
               href={originalPostingUrl}
               ref={originalPostingLink}
@@ -95,7 +96,9 @@ export function JobPostingDetails({
               target="_blank"
             >
               <span>View original posting</span>
-              <kbd className="shortcut-key">{primaryShortcutLabel("W")}</kbd>
+              <kbd className="shortcut-key">
+                {primaryShortcutLabel(OPEN_JOB_POST_SHORTCUT)}
+              </kbd>
               <span aria-hidden="true">↗</span>
             </a>
           )}

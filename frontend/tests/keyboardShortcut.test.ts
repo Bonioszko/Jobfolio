@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { matchesPrimaryShortcut } from "../src/features/job-postings/utils/keyboardShortcut.ts";
+import {
+  matchesPrimaryShortcut,
+  OPEN_JOB_POST_SHORTCUT,
+} from "../src/features/job-postings/utils/keyboardShortcut.ts";
 
 function keyboardEvent(overrides: Partial<KeyboardEvent> = {}) {
   return {
@@ -26,6 +29,18 @@ test("matches Command plus the shortcut key", () => {
 
 test("matches Control plus the shortcut key", () => {
   assert.equal(matchesPrimaryShortcut(keyboardEvent({ ctrlKey: true }), "s"), true);
+});
+
+test("opens the original job post with E instead of the browser close-tab shortcut", () => {
+  assert.equal(OPEN_JOB_POST_SHORTCUT, "E");
+  assert.equal(
+    matchesPrimaryShortcut(keyboardEvent({ key: "e", metaKey: true }), OPEN_JOB_POST_SHORTCUT),
+    true,
+  );
+  assert.equal(
+    matchesPrimaryShortcut(keyboardEvent({ key: "w", metaKey: true }), OPEN_JOB_POST_SHORTCUT),
+    false,
+  );
 });
 
 test("rejects shortcuts with additional modifiers", () => {

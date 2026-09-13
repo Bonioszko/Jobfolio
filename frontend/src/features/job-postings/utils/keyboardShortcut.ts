@@ -1,3 +1,5 @@
+export const OPEN_JOB_POST_SHORTCUT = "E";
+
 export function matchesPrimaryShortcut(event: KeyboardEvent, key: string) {
   return !event.defaultPrevented &&
     !event.repeat &&
