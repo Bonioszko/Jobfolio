@@ -1,4 +1,5 @@
 import { ErrorMessage } from "../../../components/common/ErrorMessage";
+import { CV_TAILORING_UI_ENABLED } from "../../cv-generation/config/cvTailoringUi";
 import type { DomainConfig } from "../../domain-config/types/domainConfig";
 
 type DemoLandingProps = {
@@ -22,11 +23,16 @@ export function DemoLanding({
     <main className="landing">
       <section className="landing-shell">
         <header className="landing-intro">
-          <span className="eyebrow">JOB EMAIL → APPLICATION TRACKING → TAILORED CV</span>
+          <span className="eyebrow">
+            {CV_TAILORING_UI_ENABLED
+              ? "JOB EMAIL → APPLICATION TRACKING → TAILORED CV"
+              : "JOB EMAIL → APPLICATION TRACKING"}
+          </span>
           <h1>Run your job search from one focused workspace.</h1>
           <p>
-            Jobfolio turns job-alert emails into a searchable application pipeline, then helps
-            tailor and compile a versioned CV for the role.
+            Jobfolio turns job-alert emails into a searchable application pipeline.
+            {CV_TAILORING_UI_ENABLED &&
+              " It can also tailor and compile a versioned CV for the role."}
           </p>
         </header>
 
@@ -43,9 +49,13 @@ export function DemoLanding({
               </p>
               <ul>
                 <li>Browse jobs and manage the application and interview workflow</li>
-                <li>Edit CV templates and verified candidate rules</li>
-                <li>Tailor a CV with cost-free deterministic demo generation</li>
-                <li>Compile and download a real PDF while shared capacity is available</li>
+                {CV_TAILORING_UI_ENABLED && (
+                  <>
+                    <li>Edit CV templates and verified candidate rules</li>
+                    <li>Tailor a CV with cost-free deterministic demo generation</li>
+                    <li>Compile and download a real PDF while shared capacity is available</li>
+                  </>
+                )}
               </ul>
               <div className="demo-limits">
                 <strong>Cost-safe public demo</strong>
@@ -73,13 +83,15 @@ export function DemoLanding({
             </div>
             <h2>Continue with your own data</h2>
             <p>
-              Sign in as an approved owner to use your private job history, Gmail imports, and
-              configured CV generation workflow.
+              Sign in as an approved owner to use your private job history and Gmail imports.
+              {CV_TAILORING_UI_ENABLED && " CV generation is available when configured."}
             </p>
             <ul>
               <li>Private, persistent workspace</li>
               <li>Gmail ingestion configured outside the browser</li>
-              <li>Real CV generation and compilation when enabled</li>
+              {CV_TAILORING_UI_ENABLED && (
+                <li>Real CV generation and compilation when enabled</li>
+              )}
             </ul>
             <a className="google-sign-in" href={googleSignInUrl}>Sign in with Google</a>
             <small>Access is restricted to allowlisted Google accounts.</small>

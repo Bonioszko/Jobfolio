@@ -3,6 +3,7 @@ import { ErrorMessage } from "../../../components/common/ErrorMessage";
 import { AppHeader } from "../../../components/layout/AppHeader";
 import type { Session } from "../../auth/types/session";
 import { useCandidateRules } from "../../candidate-rules/hooks/useCandidateRules";
+import { CV_TAILORING_UI_ENABLED } from "../../cv-generation/config/cvTailoringUi";
 import { useCvTemplates } from "../../cv-templates/hooks/useCvTemplates";
 import type { DomainConfig } from "../../domain-config/types/domainConfig";
 import { JobPostingDetailsPanel } from "../components/JobPostingDetailsPanel";
@@ -31,8 +32,10 @@ export function JobPostingsPage({
   );
   const visiblePostingIds = useRef<string[]>([]);
   const postings = useJobPostings();
-  const templates = useCvTemplates(domain.features.cv);
-  const rules = useCandidateRules(domain.features.cv);
+  const cvTailoringEnabled =
+    CV_TAILORING_UI_ENABLED && domain.features.cv && domain.features.cvGeneration;
+  const templates = useCvTemplates(cvTailoringEnabled);
+  const rules = useCandidateRules(cvTailoringEnabled);
 
   const error = postings.error ?? templates.error ?? rules.error ?? authenticationError;
   const selectedPosting = postings.data.find((posting) => posting.id === selectedPostingId);
@@ -94,7 +97,7 @@ export function JobPostingsPage({
           />
         )}
         <JobPostingDetailsPanel
-          cvGenerationEnabled={domain.features.cvGeneration}
+          cvGenerationEnabled={cvTailoringEnabled}
           documentName={domain.generatedDocument.singular}
           fields={domain.fields}
           isStatusUpdating={Boolean(
