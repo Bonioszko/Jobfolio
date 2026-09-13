@@ -13,8 +13,8 @@ allowlisted users, not for high-traffic multi-tenant workloads.
 
 This Terraform root provisions the Google Cloud resources required to run the
 application, its scheduled Gmail imports, database migrations, and the optional
-asynchronous PDF compiler. The baseline deployment keeps public demo mode and
-AI CV generation disabled.
+asynchronous PDF compiler. This profile enables the public demo and PDF
+compilation while keeping AI CV generation disabled.
 
 The design combines:
 
@@ -132,7 +132,8 @@ deployments.
 ## Deployment profile and limitations
 
 - Intended for a personal, two-user deployment with low baseline cost.
-- Public demo mode and AI CV generation are disabled in this environment.
+- Public demo mode and PDF compilation are enabled when the application and
+  compiler images are configured; AI CV generation remains disabled.
 - PDF compilation is opt-in through `cv_compilation_enabled`.
 - PostgreSQL is single-zone; daily snapshots improve recoverability but do not
   provide high availability.
@@ -357,7 +358,7 @@ Commit `.terraform.lock.hcl` so provider selections remain reproducible.
 
 ### Low-cost Cloud Run application
 
-The base cloud runtime keeps CV functionality disabled. PDF compilation can be
+The base cloud runtime keeps AI CV generation disabled. PDF compilation can be
 enabled independently from AI tailoring after its compiler image is bootstrapped.
 One approximately 110 MB `linux/amd64` application image contains three entry points:
 
@@ -366,8 +367,8 @@ One approximately 110 MB `linux/amd64` application image contains three entry po
 - `/app/gmail-sync/App.GmailSync.dll` for scheduled one-shot imports.
 
 Cloud Run uses request-based billing, zero minimum instances, one maximum web
-instance, 512 MiB RAM, and Direct VPC egress. Public demo and AI generation are
-disabled in this profile. Gmail jobs run on the configured schedule and exit
+instance, 512 MiB RAM, and Direct VPC egress. Public demo is enabled while AI
+generation remains disabled in this profile. Gmail jobs run on the configured schedule and exit
 after one synchronization pass.
 
 When `cv_compilation_enabled` is true, a separate compiler image runs as an
