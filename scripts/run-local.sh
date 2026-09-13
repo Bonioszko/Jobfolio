@@ -15,16 +15,17 @@ set +a
 
 docker compose up -d --wait postgres
 dotnet restore JobParser.slnx --configfile NuGet.Config
+dotnet build JobParser.slnx --no-restore
 npm --prefix frontend ci
-dotnet run --project src/App.DatabaseMigrator --no-restore
+dotnet run --project src/App.DatabaseMigrator --no-build
 
-dotnet run --project src/App.Api --launch-profile http &
+dotnet run --project src/App.Api --no-build --launch-profile http &
 api_pid=$!
 
-dotnet run --project src/App.AiWorker &
+dotnet run --project src/App.AiWorker --no-build &
 ai_worker_pid=$!
 
-dotnet run --project src/App.CompilerWorker &
+dotnet run --project src/App.CompilerWorker --no-build &
 compiler_pid=$!
 
 npm --prefix frontend run dev &
