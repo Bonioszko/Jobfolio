@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddSingleton<IDomainConfigurationProvider, FileDomainConfigurationProvider>();
         services.AddSingleton<ISystemRulesProvider, FileSystemRulesProvider>();
         services.AddSingleton(CvWorkflowSettingsFactory.Create(configuration));
+        services.AddSingleton(DemoSettingsFactory.Create(configuration));
         services.AddSingleton(CodexCliOptions.FromConfiguration(configuration));
 
         services.AddScoped<IDemoSessionService, DemoSessionService>();

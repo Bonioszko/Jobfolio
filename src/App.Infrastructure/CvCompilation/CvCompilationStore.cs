@@ -7,6 +7,8 @@ namespace App.Infrastructure;
 
 public sealed class CvCompilationStore(AppDbContext db) : ICvCompilationStore
 {
+    private const int DemoQuotaAdvisoryLockId = 1_245_706_068;
+
     public Task<bool> VersionExistsAsync(
         string workspaceKey,
         Guid generatedCvVersionId,
@@ -32,6 +34,7 @@ public sealed class CvCompilationStore(AppDbContext db) : ICvCompilationStore
     public async Task<bool> TryAddAsync(
         CvCompileJob job,
         int maximumJobsPerWorkspace,
+        DemoCompilationQuota? demoQuota,
         CancellationToken cancellationToken)
     {
         if (!job.HasExactlyOneSource)
@@ -44,6 +47,23 @@ public sealed class CvCompilationStore(AppDbContext db) : ICvCompilationStore
         await using var transaction = await db.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
+
+        if (demoQuota is not null)
+        {
+            if (db.Database.ProviderName == "Npgsql.EntityFrameworkCore.PostgreSQL")
+            {
+                await db.Database.ExecuteSqlInterpolatedAsync(
+                    $"SELECT pg_advisory_xact_lock({DemoQuotaAdvisoryLockId})",
+                    cancellationToken);
+            }
+
+            var demoJobsInWindow = await db.CvCompileJobs.CountAsync(
+                candidate => candidate.WorkspaceKey.StartsWith("demo:") &&
+                             candidate.CreatedAt >= demoQuota.WindowStart,
+                cancellationToken);
+            if (demoJobsInWindow >= demoQuota.MaximumJobs) return false;
+        }
+
         var count = await db.CvCompileJobs.CountAsync(
             candidate => candidate.WorkspaceKey == job.WorkspaceKey &&
                          (candidate.Status == JobStatus.Queued ||

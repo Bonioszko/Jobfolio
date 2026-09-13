@@ -32,6 +32,7 @@ export function App() {
     return (
       <DemoLanding
         demoEnabled={domainConfig.data.features.demo}
+        demoPolicy={domainConfig.data.demoPolicy}
         error={demoSession.error ?? session.error ?? getAuthenticationError()}
         googleSignInUrl={googleSignInUrl}
         isStarting={demoSession.isStarting}

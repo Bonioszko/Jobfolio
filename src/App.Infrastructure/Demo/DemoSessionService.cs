@@ -7,17 +7,16 @@ namespace App.Infrastructure;
 public sealed class DemoSessionService(
     AppDbContext db,
     IDemoWorkspaceSeeder seeder,
-    TimeProvider timeProvider) : IDemoSessionService
+    TimeProvider timeProvider,
+    DemoSettings settings) : IDemoSessionService
 {
-    private static readonly TimeSpan SessionLifetime = TimeSpan.FromHours(6);
-
     public async Task<DemoSessionView> CreateAsync(CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
         var session = new DemoSession
         {
             CreatedAt = now,
-            ExpiresAt = now.Add(SessionLifetime)
+            ExpiresAt = now.Add(settings.SessionLifetime)
         };
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);

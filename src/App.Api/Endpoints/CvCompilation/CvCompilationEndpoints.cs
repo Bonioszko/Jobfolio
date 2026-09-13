@@ -19,8 +19,10 @@ public static class CvCompilationEndpoints
         ICvCompilationService cvCompilation,
         CancellationToken cancellationToken)
     {
+        var workspace = workspaceAccessor.GetRequired();
         var result = await cvCompilation.RequestTemplateAsync(
-            workspaceAccessor.GetRequired().Key,
+            workspace.Key,
+            workspace.Mode,
             body.DocumentVersionId,
             cancellationToken);
 
@@ -42,8 +44,10 @@ public static class CvCompilationEndpoints
         ICvCompilationService cvCompilation,
         CancellationToken cancellationToken)
     {
+        var workspace = workspaceAccessor.GetRequired();
         var result = await cvCompilation.RequestAsync(
-            workspaceAccessor.GetRequired().Key,
+            workspace.Key,
+            workspace.Mode,
             body.DocumentVersionId,
             cancellationToken);
 

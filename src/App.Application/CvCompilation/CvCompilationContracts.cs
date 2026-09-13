@@ -17,11 +17,13 @@ public interface ICvCompilationService
 {
     Task<RequestCvCompilationResult> RequestAsync(
         string workspaceKey,
+        UserMode userMode,
         Guid generatedCvVersionId,
         CancellationToken cancellationToken);
 
     Task<RequestCvCompilationResult> RequestTemplateAsync(
         string workspaceKey,
+        UserMode userMode,
         Guid templateVersionId,
         CancellationToken cancellationToken);
 
@@ -107,6 +109,7 @@ public interface ICvCompilationStore
     Task<bool> TryAddAsync(
         CvCompileJob job,
         int maximumJobsPerWorkspace,
+        DemoCompilationQuota? demoQuota,
         CancellationToken cancellationToken);
     Task<CvCompileJob?> GetAsync(
         string workspaceKey,
@@ -129,6 +132,10 @@ public interface ICvCompilationStore
         CancellationToken cancellationToken);
     Task SaveAsync(CvCompileJob job, CancellationToken cancellationToken);
 }
+
+public sealed record DemoCompilationQuota(
+    DateTimeOffset WindowStart,
+    int MaximumJobs);
 
 public enum CvCompilationClaimOutcome
 {

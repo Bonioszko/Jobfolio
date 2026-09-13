@@ -60,6 +60,7 @@ public sealed class ActiveJobQuotaTests
         var added = await new CvCompilationStore(db).TryAddAsync(
             CreateCompilationJob(workspace),
             maximumJobsPerWorkspace: 1,
+            demoQuota: null,
             CancellationToken.None);
 
         Assert.True(added);
@@ -79,6 +80,7 @@ public sealed class ActiveJobQuotaTests
         var added = await new CvCompilationStore(db).TryAddAsync(
             CreateCompilationJob(workspace),
             maximumJobsPerWorkspace: 1,
+            demoQuota: null,
             CancellationToken.None);
 
         Assert.False(added);
@@ -94,6 +96,7 @@ public sealed class ActiveJobQuotaTests
         await Assert.ThrowsAsync<ArgumentException>(() => store.TryAddAsync(
             new CvCompileJob { WorkspaceKey = "demo:invalid" },
             maximumJobsPerWorkspace: 1,
+            demoQuota: null,
             CancellationToken.None));
 
         await Assert.ThrowsAsync<ArgumentException>(() => store.TryAddAsync(
@@ -104,6 +107,7 @@ public sealed class ActiveJobQuotaTests
                 CvTemplateVersionId = Guid.NewGuid()
             },
             maximumJobsPerWorkspace: 1,
+            demoQuota: null,
             CancellationToken.None));
     }
 

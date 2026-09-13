@@ -24,6 +24,14 @@ Cloud Run values override the checked-in defaults. Terraform reads the ignored
 `terraform.tfvars` automatically. Its GCS backend uses the ignored
 `backend.hcl` supplied explicitly during initialization.
 
+Public demo sessions use the checked-in `Demo` defaults unless overridden. The
+session lifetime is six hours, and at most two PDF compilation requests are
+accepted across all demo workspaces in a rolling 60-minute window. Override
+`Demo__SessionLifetimeHours`, `Demo__MaxCompilationJobsPerWindow`, or
+`Demo__CompilationWindowMinutes` to tune the portfolio deployment without a
+code change. Demo CV generation is deterministic and never invokes the paid
+generator.
+
 Do not use `git update-index --skip-worktree` or `--assume-unchanged` for local
 configuration. Those flags are local Git implementation details, not a secret
 management boundary.

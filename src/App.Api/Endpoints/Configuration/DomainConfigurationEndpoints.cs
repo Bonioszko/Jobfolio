@@ -11,7 +11,7 @@ public static class DomainConfigurationEndpoints
     {
         endpoints.MapGet(
             "/api/config/domain",
-            (IDomainConfigurationProvider configuration) =>
+            (IDomainConfigurationProvider configuration, DemoSettings demoSettings) =>
             {
                 var current = configuration.Current;
                 return Results.Ok(new
@@ -25,6 +25,12 @@ public static class DomainConfigurationEndpoints
                         Cv = features.CvEnabled,
                         CvGeneration = features.CvGenerationEnabled,
                         Demo = features.DemoEnabled
+                    },
+                    DemoPolicy = new
+                    {
+                        demoSettings.SessionLifetimeHours,
+                        demoSettings.MaxCompilationJobsPerWindow,
+                        demoSettings.CompilationWindowMinutes
                     }
                 });
             });

@@ -88,11 +88,16 @@
   }
 
   .landing {
-    padding: 22px;
+    padding: 18px;
   }
 
-  .landing > div {
+  .landing-shell {
+    padding: 26px 20px;
     box-shadow: 9px 9px 0 #dfe3dc;
+  }
+
+  .landing-options {
+    grid-template-columns: 1fr;
   }
 
   .interview-dashboard {

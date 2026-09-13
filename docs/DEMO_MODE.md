@@ -99,7 +99,20 @@ CvGenerationJob
 
 Using the real Tectonic compilation pipeline is acceptable and useful for demonstrating architecture.
 
-Apply stricter per-session quotas.
+Apply a stricter server-enforced quota. The default permits two compilation
+requests across all demo sessions in a rolling 60-minute window. Both template
+previews and generated-CV PDFs count toward the same allowance; completed and
+failed requests remain counted because both may consume compiler capacity.
+
+The limit is configurable through:
+
+```text
+Demo:MaxCompilationJobsPerWindow
+Demo:CompilationWindowMinutes
+```
+
+Real-user workspaces do not consume or inherit this public-demo quota. PostgreSQL
+advisory locking serializes the shared check across API instances.
 
 ---
 
@@ -107,7 +120,8 @@ Apply stricter per-session quotas.
 
 Demo sessions are temporary.
 
-An expiry such as several hours is appropriate.
+An expiry such as several hours is appropriate. The default is six hours and is
+configured through `Demo:SessionLifetimeHours`.
 
 Persist:
 

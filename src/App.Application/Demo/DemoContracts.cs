@@ -1,5 +1,14 @@
 namespace App.Application;
 
+public sealed record DemoSettings(
+    int SessionLifetimeHours,
+    int MaxCompilationJobsPerWindow,
+    int CompilationWindowMinutes)
+{
+    public TimeSpan SessionLifetime => TimeSpan.FromHours(SessionLifetimeHours);
+    public TimeSpan CompilationWindow => TimeSpan.FromMinutes(CompilationWindowMinutes);
+}
+
 public sealed record DemoSessionView(Guid Id, DateTimeOffset ExpiresAt);
 
 public interface IDemoWorkspaceSeeder

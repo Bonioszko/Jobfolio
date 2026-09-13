@@ -20,4 +20,9 @@ export type DomainConfig = {
     cvGeneration: boolean;
     demo: boolean;
   };
+  demoPolicy: {
+    sessionLifetimeHours: number;
+    maxCompilationJobsPerWindow: number;
+    compilationWindowMinutes: number;
+  };
 };

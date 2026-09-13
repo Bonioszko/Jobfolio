@@ -5,10 +5,13 @@ namespace App.Application;
 public sealed class CvCompilationService(
     ICvCompilationStore store,
     ICvCompilationQueue queue,
-    CvWorkflowSettings settings) : ICvCompilationService
+    CvWorkflowSettings settings,
+    DemoSettings demoSettings,
+    TimeProvider timeProvider) : ICvCompilationService
 {
     public async Task<RequestCvCompilationResult> RequestAsync(
         string workspaceKey,
+        UserMode userMode,
         Guid generatedCvVersionId,
         CancellationToken cancellationToken)
     {
@@ -18,14 +21,17 @@ public sealed class CvCompilationService(
             return new RequestCvCompilationResult(RequestCvCompilationOutcome.InvalidInput);
         }
 
+        var now = timeProvider.GetUtcNow();
         var job = new CvCompileJob
         {
             WorkspaceKey = workspaceKey,
-            GeneratedCvVersionId = generatedCvVersionId
+            GeneratedCvVersionId = generatedCvVersionId,
+            CreatedAt = now
         };
         var added = await store.TryAddAsync(
             job,
             settings.MaxCompilationJobsPerWorkspace,
+            CreateDemoQuota(userMode, now),
             cancellationToken);
         if (!added)
         {
@@ -41,6 +47,7 @@ public sealed class CvCompilationService(
 
     public async Task<RequestCvCompilationResult> RequestTemplateAsync(
         string workspaceKey,
+        UserMode userMode,
         Guid templateVersionId,
         CancellationToken cancellationToken)
     {
@@ -50,14 +57,17 @@ public sealed class CvCompilationService(
             return new RequestCvCompilationResult(RequestCvCompilationOutcome.InvalidInput);
         }
 
+        var now = timeProvider.GetUtcNow();
         var job = new CvCompileJob
         {
             WorkspaceKey = workspaceKey,
-            CvTemplateVersionId = templateVersionId
+            CvTemplateVersionId = templateVersionId,
+            CreatedAt = now
         };
         var added = await store.TryAddAsync(
             job,
             settings.MaxCompilationJobsPerWorkspace,
+            CreateDemoQuota(userMode, now),
             cancellationToken);
         if (!added)
         {
@@ -79,4 +89,11 @@ public sealed class CvCompilationService(
 
     private static AsyncJobView Map(CvCompileJob job) =>
         new(job.Id, job.Status, job.Error, job.PdfArtifactId);
+
+    private DemoCompilationQuota? CreateDemoQuota(UserMode userMode, DateTimeOffset now) =>
+        userMode == UserMode.Demo
+            ? new DemoCompilationQuota(
+                now.Subtract(demoSettings.CompilationWindow),
+                demoSettings.MaxCompilationJobsPerWindow)
+            : null;
 }
