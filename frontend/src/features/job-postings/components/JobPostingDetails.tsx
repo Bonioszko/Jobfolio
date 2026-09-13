@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { CandidateRules } from "../../candidate-rules/types/candidateRules";
 import { CvTailoringPanel } from "../../cv-generation/components/CvTailoringPanel";
+import { CvTemplateEditor } from "../../cv-templates/components/CvTemplateEditor";
 import type {
   CvTemplate,
   SaveCvTemplateInput,
@@ -21,6 +22,7 @@ import {
 import { JobStatusActions } from "./JobStatusActions";
 
 type JobPostingDetailsProps = {
+  cvEnabled: boolean;
   cvGenerationEnabled: boolean;
   documentName: string;
   fields: DomainField[];
@@ -40,6 +42,7 @@ type JobPostingDetailsProps = {
 };
 
 export function JobPostingDetails({
+  cvEnabled,
   cvGenerationEnabled,
   documentName,
   fields,
@@ -165,6 +168,16 @@ export function JobPostingDetails({
         </p>
       </section>
       <InterviewNotesPanel jobPostingId={posting.id} />
+
+      {cvEnabled && (
+        <CvTemplateEditor
+          error={templateSaveError}
+          isSaving={isTemplateSaving}
+          onSave={onTemplateSave}
+          onSaved={() => undefined}
+          templates={templates}
+        />
+      )}
 
       {cvGenerationEnabled && (
         <CvTailoringPanel

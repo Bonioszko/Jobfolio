@@ -34,7 +34,7 @@ export function JobPostingsPage({
   const postings = useJobPostings();
   const cvTailoringEnabled =
     CV_TAILORING_UI_ENABLED && domain.features.cv && domain.features.cvGeneration;
-  const templates = useCvTemplates(cvTailoringEnabled);
+  const templates = useCvTemplates(domain.features.cv);
   const rules = useCandidateRules(cvTailoringEnabled);
 
   const error = postings.error ?? templates.error ?? rules.error ?? authenticationError;
@@ -97,6 +97,7 @@ export function JobPostingsPage({
           />
         )}
         <JobPostingDetailsPanel
+          cvEnabled={domain.features.cv}
           cvGenerationEnabled={cvTailoringEnabled}
           documentName={domain.generatedDocument.singular}
           fields={domain.fields}

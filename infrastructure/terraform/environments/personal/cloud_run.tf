@@ -116,7 +116,7 @@ resource "google_cloud_run_v2_service" "web" {
 
       env {
         name  = "Features__DemoEnabled"
-        value = "false"
+        value = "true"
       }
 
       env {

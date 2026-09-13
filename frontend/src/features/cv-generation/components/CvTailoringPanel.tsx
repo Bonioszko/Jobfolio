@@ -29,7 +29,6 @@ export function CvTailoringPanel({
 }: CvTailoringPanelProps) {
   const [templateVersionId, setTemplateVersionId] = useState(templates[0]?.versionId ?? "");
   const [customJobDescription, setCustomJobDescription] = useState("");
-  const [instruction, setInstruction] = useState("");
   const generation = useCvGeneration();
 
   useEffect(() => {
@@ -46,7 +45,6 @@ export function CvTailoringPanel({
       templateVersionId,
       ruleVersionId: rules.versionId,
       customJobDescription: customJobDescription.trim() || undefined,
-      instruction: instruction.trim() || undefined,
     });
   };
 
@@ -104,19 +102,6 @@ export function CvTailoringPanel({
           />
           <small>This is treated as job-posting content, not as an instruction.</small>
         </label>
-
-        <details className="instruction-disclosure">
-          <summary>Additional tailoring direction</summary>
-          <label className="form-field">
-            <span className="visually-hidden">Additional tailoring direction</span>
-            <textarea
-              className="instruction-input"
-              placeholder="For example: keep the summary concise or emphasize leadership experience."
-              value={instruction}
-              onChange={(event) => setInstruction(event.target.value)}
-            />
-          </label>
-        </details>
 
         <button
           className="primary-action tailoring-submit"
