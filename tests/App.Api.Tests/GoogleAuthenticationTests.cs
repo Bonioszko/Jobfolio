@@ -56,6 +56,34 @@ public sealed class GoogleAuthenticationTests
         Assert.Equal("google-subject", result.FindFirstValue("google_subject"));
     }
 
+    [Fact]
+    public void Second_verified_allowlisted_identity_maps_to_its_own_workspace()
+    {
+        var settings = GoogleAuthenticationSettings.FromConfiguration(BuildConfiguration(
+            new Dictionary<string, string?>
+            {
+                ["Authentication:Google:Enabled"] = "true",
+                ["Authentication:Google:ClientId"] = "client",
+                ["Authentication:Google:ClientSecret"] = "secret",
+                ["Authentication:Google:AllowedUsers:0:Email"] = "owner@example.com",
+                ["Authentication:Google:AllowedUsers:0:WorkspaceId"] = "user-one",
+                ["Authentication:Google:AllowedUsers:1:Email"] = "second@example.com",
+                ["Authentication:Google:AllowedUsers:1:WorkspaceId"] = "user-two"
+            }));
+        var googlePrincipal = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("sub", "second-google-subject"),
+            new Claim("email", "second@example.com"),
+            new Claim("email_verified", "true")
+        ], "Google"));
+
+        var result = GoogleClaimsPrincipalFactory.Create(googlePrincipal, settings);
+
+        Assert.NotNull(result);
+        Assert.Equal("user-two", result.FindFirstValue(ClaimTypes.NameIdentifier));
+        Assert.Equal("second@example.com", result.FindFirstValue(ClaimTypes.Email));
+    }
+
     [Theory]
     [InlineData("false", "owner@example.com")]
     [InlineData("true", "someone-else@example.com")]

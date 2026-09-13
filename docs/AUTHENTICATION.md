@@ -33,6 +33,17 @@ dotnet user-secrets --project src/App.Api set "Authentication:Google:AllowedUser
 `WorkspaceId` must match the suffix of the workspace used by the Gmail importer. Existing jobs
 stored under `user:user-one` therefore require `user-one` here.
 
+Add a second real user with the next configuration index and a different stable workspace ID:
+
+```powershell
+dotnet user-secrets --project src/App.Api set "Authentication:Google:AllowedUsers:1:Email" "SECOND_GOOGLE_EMAIL"
+dotnet user-secrets --project src/App.Api set "Authentication:Google:AllowedUsers:1:WorkspaceId" "user-two"
+```
+
+In Google Cloud, the equivalent is a second `allowed_users` map entry. If the Google Auth Platform
+audience remains in Testing, also add the address under **Audience → Test users**. Gmail mailbox
+authorization and its refresh token are separate; follow `docs/GMAIL_SYNC.md` for that setup.
+
 Run the API and frontend, open `http://localhost:5173`, and select **Sign in with Google**. An active
 demo session also shows a **Sign in** action in the workspace header.
 

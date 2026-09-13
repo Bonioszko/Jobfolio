@@ -134,12 +134,16 @@ variable "allowed_users" {
   default     = {}
 
   validation {
-    condition = length(var.allowed_users) <= 10 && alltrue([
-      for email, workspace_id in var.allowed_users :
-      can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", email)) &&
-      can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", workspace_id))
-    ])
-    error_message = "allowed_users must contain at most ten valid emails mapped to valid workspace IDs."
+    condition = (
+      length(var.allowed_users) <= 10 &&
+      length(distinct(values(var.allowed_users))) == length(var.allowed_users) &&
+      alltrue([
+        for email, workspace_id in var.allowed_users :
+        can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", email)) &&
+        can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", workspace_id))
+      ])
+    )
+    error_message = "allowed_users must contain at most ten valid emails mapped to unique, valid workspace IDs."
   }
 }
 
@@ -161,14 +165,18 @@ variable "gmail_sync_accounts" {
   default = {}
 
   validation {
-    condition = length(var.gmail_sync_accounts) <= 2 && alltrue([
-      for key, account in var.gmail_sync_accounts :
-      can(regex("^[a-z0-9][a-z0-9-]{0,28}[a-z0-9]$", key)) &&
-      can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", account.workspace_id)) &&
-      length(account.labels) > 0 && length(account.labels) <= 20 &&
-      length(distinct(account.labels)) == length(account.labels)
-    ])
-    error_message = "gmail_sync_accounts supports at most two valid account definitions with at least one label each."
+    condition = (
+      length(var.gmail_sync_accounts) <= 2 &&
+      length(distinct([for account in values(var.gmail_sync_accounts) : account.workspace_id])) == length(var.gmail_sync_accounts) &&
+      alltrue([
+        for key, account in var.gmail_sync_accounts :
+        can(regex("^[a-z0-9][a-z0-9-]{0,28}[a-z0-9]$", key)) &&
+        can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$", account.workspace_id)) &&
+        length(account.labels) > 0 && length(account.labels) <= 20 &&
+        length(distinct(account.labels)) == length(account.labels)
+      ])
+    )
+    error_message = "gmail_sync_accounts supports at most two valid account definitions with unique workspaces and at least one label each."
   }
 }
 

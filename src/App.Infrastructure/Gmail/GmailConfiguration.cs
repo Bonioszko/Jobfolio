@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using App.Application;
 using Microsoft.Extensions.Configuration;
 
@@ -9,7 +10,8 @@ internal sealed record GmailOAuthSettings(
     string UserKey,
     string? ClientId,
     string? ClientSecret,
-    string? RefreshToken)
+    string? RefreshToken,
+    string? ExpectedEmail)
 {
     public bool UsesRefreshToken => RefreshToken is not null;
 }
@@ -74,6 +76,7 @@ internal static class GmailConfiguration
         var clientId = NullIfWhiteSpace(configuration["Gmail:OAuth:ClientId"]);
         var clientSecret = NullIfWhiteSpace(configuration["Gmail:OAuth:ClientSecret"]);
         var refreshToken = NullIfWhiteSpace(configuration["Gmail:OAuth:RefreshToken"]);
+        var expectedEmail = NullIfWhiteSpace(configuration["Gmail:AccountEmail"]);
         var directCredentialCount = new[] { clientId, clientSecret, refreshToken }
             .Count(value => value is not null);
         if (directCredentialCount is > 0 and < 3)
@@ -96,13 +99,36 @@ internal static class GmailConfiguration
         }
 
         var userKey = configuration["Gmail:OAuth:UserKey"]?.Trim();
+        ValidateExpectedEmail(expectedEmail);
         return new GmailOAuthSettings(
             string.IsNullOrWhiteSpace(clientSecretsPath) ? null : Path.GetFullPath(clientSecretsPath),
             Path.GetFullPath(tokenStoreDirectory),
             string.IsNullOrWhiteSpace(userKey) ? "primary" : userKey,
             clientId,
             clientSecret,
-            refreshToken);
+            refreshToken,
+            expectedEmail);
+    }
+
+    private static void ValidateExpectedEmail(string? email)
+    {
+        if (email is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var address = new MailAddress(email);
+            if (!string.Equals(address.Address, email, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new FormatException();
+            }
+        }
+        catch (FormatException)
+        {
+            throw new InvalidOperationException("Gmail:AccountEmail must be a valid email address.");
+        }
     }
 
     private static string? NullIfWhiteSpace(string? value) =>

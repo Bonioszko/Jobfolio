@@ -17,6 +17,7 @@ Use user secrets rather than committing account-specific values:
 
 ```powershell
 dotnet user-secrets --project src/App.GmailSync set "Gmail:Enabled" "true"
+dotnet user-secrets --project src/App.GmailSync set "Gmail:AccountEmail" "YOUR_GOOGLE_EMAIL"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:WorkspaceKey" "user:YOUR_WORKSPACE_ID"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:Labels:0" "Job alerts"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:OAuth:ClientSecretsPath" "C:\secure\gmail-oauth-client.json"
@@ -50,6 +51,10 @@ The workspace key must use the same `user:<workspace ID>` configured for that em
 `Authentication:Google:AllowedUsers` in the API. For example, an API `WorkspaceId` of
 `user-one` owns Gmail data under `user:user-one`. Demo workspaces are rejected.
 
+When `Gmail:AccountEmail` is configured, the worker reads the authenticated Gmail profile before
+importing messages and rejects a token belonging to another mailbox. Cloud deployments always set
+this value from the allowlisted email mapped to the job's workspace.
+
 ## Personal Cloud Run job
 
 The low-cost personal deployment executes one synchronization pass and exits by setting:
@@ -64,6 +69,55 @@ For a non-interactive Cloud Run Job, configure `Gmail:OAuth:ClientId`,
 refresh token are injected from Secret Manager. Local development keeps using the desktop
 authorization flow and `FileDataStore`; cloud jobs never attempt to open a browser or persist
 credentials on their ephemeral filesystem.
+
+## Adding a second cloud mailbox
+
+Each mailbox has an independent workspace, refresh-token secret, Cloud Run job, and scheduler.
+The two accounts may use the same Gmail label name; labels are resolved inside each mailbox.
+
+1. In the second Gmail account, create the configured label (for example, `Job alerts`) and apply
+   it to the alert messages that should be imported.
+2. If the Google Auth Platform audience is in Testing, add the second address under **Audience →
+   Test users** before authorizing it. Gmail read-only refresh tokens issued while an external app
+   remains in Testing expire after seven days; use an appropriate production or internal audience
+   for durable scheduled access.
+3. Obtain a separate offline refresh token using the existing Desktop OAuth client. For the local
+   authorization run, use a new `Gmail:OAuth:UserKey` and token-store directory so the first
+   account's cached grant cannot be reused. Select the second Google account in the consent flow.
+4. Add the second email to `allowed_users` with a new, stable workspace ID. Add a matching
+   `gmail_sync_accounts` entry with `enabled = false`, then run `terraform plan` and
+   `terraform apply`. This first stage grants application sign-in and creates the new empty Secret
+   Manager container without deploying a Gmail job that lacks a token.
+5. Put only the second account's refresh token in
+   `jobparser-gmail-refresh-token-<account-key>`. Never reuse the first account's token and never
+   put either token in Terraform variables.
+6. Change the second Gmail account entry to `enabled = true`, review another plan, and apply it.
+   Terraform creates `jobparser-gmail-sync-<account-key>` and its schedule.
+7. Execute that Cloud Run job once manually and confirm that postings appear only after signing in
+   as the second user.
+
+The account key is an infrastructure name such as `second`; it is not the email address. The
+`workspace_id` must exactly match the value mapped from the second email in `allowed_users`.
+
+For example, keep the Desktop OAuth JSON path in user secrets, then start a one-off local grant with
+overrides that cannot reuse the first account's cached credential:
+
+```bash
+dotnet run --project src/App.GmailSync -- \
+  --Gmail:Enabled=true \
+  --Gmail:RunOnce=true \
+  --Gmail:AccountEmail=SECOND_GOOGLE_EMAIL \
+  --Gmail:WorkspaceKey=user:second-user \
+  --Gmail:Labels:0="Job alerts" \
+  --Gmail:OAuth:UserKey=second \
+  --Gmail:OAuth:TokenStoreDirectory=/absolute/private/path/gmail-token-second
+```
+
+The browser consent must be completed while signed in as `SECOND_GOOGLE_EMAIL`. The worker rejects
+the grant before import if a different account is selected. Locate the resulting JSON credential in
+the private token-store directory, copy only its `refresh_token` value to a temporary private text
+file, upload that file to the second account's Secret Manager container, and delete the temporary
+file after successful rollout. Do not print the token in a terminal or paste it into shell history.
 
 ## Processing behavior
 

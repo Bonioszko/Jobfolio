@@ -41,5 +41,9 @@ locals {
     }
   ]
 
+  allowed_emails_by_workspace = {
+    for email, workspace_id in var.allowed_users : workspace_id => email...
+  }
+
   cv_compilation_runtime_enabled = var.application_runtime_enabled && var.cv_compilation_enabled
 }

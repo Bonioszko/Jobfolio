@@ -366,6 +366,11 @@ resource "google_cloud_run_v2_job" "gmail_sync" {
         }
 
         env {
+          name  = "Gmail__AccountEmail"
+          value = try(local.allowed_emails_by_workspace[each.value.workspace_id][0], "")
+        }
+
+        env {
           name  = "Gmail__MaxMessagesPerRun"
           value = "100"
         }

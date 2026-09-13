@@ -39,6 +39,12 @@ gmail_sync_accounts  = {}
 #     labels       = ["Job alerts"]
 #     schedule     = "*/30 * * * *"
 #   }
+#   second = {
+#     workspace_id = "second-user"
+#     labels       = ["Job alerts"]
+#     schedule     = "*/30 * * * *"
+#     enabled      = false # Enable only after its refresh-token secret has a version.
+#   }
 # }
 
 # Creates Workload Identity Federation for keyless deployment from main.

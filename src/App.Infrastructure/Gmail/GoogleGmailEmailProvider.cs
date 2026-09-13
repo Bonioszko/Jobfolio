@@ -83,16 +83,49 @@ internal sealed class GoogleGmailEmailProvider(GmailOAuthSettings settings)
                     cancellationToken,
                     new FileDataStore(settings.TokenStoreDirectory, fullPath: true));
             }
-            service = new GmailService(new BaseClientService.Initializer
+            var initializedService = new GmailService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credential,
                 ApplicationName = "Job Parser Gmail Sync"
             });
-            return service;
+
+            try
+            {
+                await ValidateAuthorizedAccountAsync(initializedService, cancellationToken);
+                service = initializedService;
+                return service;
+            }
+            catch
+            {
+                initializedService.Dispose();
+                throw;
+            }
         }
         finally
         {
             initializationGate.Release();
+        }
+    }
+
+    private async Task ValidateAuthorizedAccountAsync(
+        GmailService gmail,
+        CancellationToken cancellationToken)
+    {
+        if (settings.ExpectedEmail is null)
+        {
+            return;
+        }
+
+        var profile = await gmail.Users.GetProfile("me").ExecuteAsync(cancellationToken);
+        EnsureExpectedAccount(settings.ExpectedEmail, profile.EmailAddress);
+    }
+
+    internal static void EnsureExpectedAccount(string expectedEmail, string? authorizedEmail)
+    {
+        if (!string.Equals(expectedEmail, authorizedEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "The authorized Gmail account does not match Gmail:AccountEmail.");
         }
     }
 

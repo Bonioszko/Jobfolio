@@ -419,10 +419,85 @@ private Cloud Storage bucket.
      --wait
    ```
 
-7. For each Gmail account, add the common desktop OAuth client secret and the
-   account's refresh token to their Secret Manager containers, then add the
-   corresponding `gmail_sync_accounts` entry and apply. Secret values are never
-   Terraform variables and never enter Terraform state.
+7. Add the common desktop OAuth client secret to its Secret Manager container. For each Gmail
+   account, add its `gmail_sync_accounts` entry with `enabled = false` and apply to create the
+   account-specific refresh-token secret container. Add the token as a secret version, change the
+   account to `enabled = true`, and apply again. Secret values are never Terraform variables and
+   never enter Terraform state.
+
+#### Add a second application user and Gmail mailbox
+
+Use a distinct workspace ID and account key. The label name may be the same in both mailboxes.
+
+```hcl
+allowed_users = {
+  "first@example.com"  = "first-user"
+  "second@example.com" = "second-user"
+}
+
+gmail_sync_accounts = {
+  first = {
+    workspace_id = "first-user"
+    labels       = ["Job alerts"]
+    schedule     = "*/30 * * * *"
+  }
+  second = {
+    workspace_id = "second-user"
+    labels       = ["Job alerts"]
+    schedule     = "*/30 * * * *"
+    enabled      = false
+  }
+}
+```
+
+Before obtaining the token, create the label in the second mailbox and add that email to the Google
+Auth Platform test-user list if the OAuth audience is still in Testing. Authorize the second
+mailbox with the same Desktop OAuth client but a distinct local `Gmail:OAuth:UserKey` and token
+store. Keep only its refresh token in a temporary private file outside the repository.
+
+Apply the disabled account first. The plan should add the second allowed-user environment mapping
+and create `jobparser-gmail-refresh-token-second`, but should not create the second Cloud Run job or
+scheduler yet.
+
+```bash
+terraform plan
+terraform apply
+```
+
+Add the token to the now-existing secret container. `gcloud secrets versions add` has no dry-run or
+validate-only flag, so verify the project, secret name, and input file before running it.
+
+```bash
+gcloud secrets versions add jobparser-gmail-refresh-token-second \
+  --project="${JOBPARSER_GCP_PROJECT_ID}" \
+  --data-file=/absolute/private/path/second-refresh-token.txt \
+  --quiet
+```
+
+Set the second entry's `enabled` value to `true`, then plan and apply again. Terraform derives
+`Gmail__AccountEmail` from `allowed_users`; the worker verifies the refresh token belongs to that
+mailbox before importing messages.
+
+```bash
+terraform plan
+terraform apply
+```
+
+Run the new job once rather than waiting for its first scheduled invocation. The execute command
+has no dry-run or validate-only flag.
+
+```bash
+gcloud run jobs execute jobparser-gmail-sync-second \
+  --project="${JOBPARSER_GCP_PROJECT_ID}" \
+  --region="${JOBPARSER_GCP_REGION}" \
+  --wait \
+  --quiet
+```
+
+Sign in to the web application with the second email and verify its workspace contains only its own
+imports. The first user's postings must remain invisible. If the Gmail OAuth audience is an
+external app in Testing, its Gmail refresh tokens expire after seven days; choose an appropriate
+production or internal audience for durable scheduled imports.
 
 #### Enable PDF compilation
 

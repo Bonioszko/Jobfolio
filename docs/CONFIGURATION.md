@@ -76,6 +76,7 @@ outside the repository and configure its absolute path:
 
 ```bash
 dotnet user-secrets --project src/App.GmailSync set "Gmail:Enabled" "true"
+dotnet user-secrets --project src/App.GmailSync set "Gmail:AccountEmail" "YOUR_GOOGLE_EMAIL"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:WorkspaceKey" "user:user-one"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:Labels:0" "Job alerts"
 dotnet user-secrets --project src/App.GmailSync set "Gmail:OAuth:ClientSecretsPath" "/absolute/private/path/gmail-oauth-client.json"
@@ -172,9 +173,11 @@ gcloud secrets versions add jobparser-gmail-oauth-client-secret \
 ```
 
 Each configured Gmail account also needs its corresponding
-`jobparser-gmail-refresh-token-<account-key>` secret version. Never pass these
-values through Terraform variables because Terraform would retain them in its
-state.
+`jobparser-gmail-refresh-token-<account-key>` secret version. Add a new account to
+`gmail_sync_accounts` with `enabled = false` and apply first so Terraform can create the empty
+secret container. Add its secret version outside Terraform, then enable the account and apply
+again. Never pass these values through Terraform variables because Terraform would retain them in
+its state.
 
 Follow the staged infrastructure and image bootstrap procedure in
 [`infrastructure/terraform/environments/personal/README.md`](../infrastructure/terraform/environments/personal/README.md).
