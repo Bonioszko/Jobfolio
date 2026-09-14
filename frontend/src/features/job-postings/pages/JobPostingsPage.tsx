@@ -8,7 +8,9 @@ import { useCvTemplates } from "../../cv-templates/hooks/useCvTemplates";
 import type { DomainConfig } from "../../domain-config/types/domainConfig";
 import { JobPostingDetailsPanel } from "../components/JobPostingDetailsPanel";
 import { JobPostingsList } from "../components/JobPostingsList";
+import { ManualJobPostingDialog } from "../components/ManualJobPostingDialog";
 import { useJobPostings } from "../hooks/useJobPostings";
+import type { CreateManualJobPostingInput } from "../types/jobPosting";
 
 type JobPostingsPageProps = {
   authenticationError?: string;
@@ -27,6 +29,7 @@ export function JobPostingsPage({
   onLogout,
   session,
 }: JobPostingsPageProps) {
+  const [isAddJobOpen, setIsAddJobOpen] = useState(false);
   const [selectedPostingId, setSelectedPostingId] = useState<string | undefined>(() =>
     new URLSearchParams(window.location.search).get("job") ?? undefined,
   );
@@ -73,6 +76,14 @@ export function JobPostingsPage({
     }
   };
 
+  const handleCreatePosting = async (input: CreateManualJobPostingInput) => {
+    const created = await postings.createPosting(input);
+    if (!created) return false;
+
+    setSelectedPostingId(created.id);
+    return true;
+  };
+
   return (
     <main className="app-shell">
       <AppHeader
@@ -90,6 +101,10 @@ export function JobPostingsPage({
         ) : (
           <JobPostingsList
             activeId={selectedPostingId}
+            onAdd={() => {
+              postings.clearCreateError();
+              setIsAddJobOpen(true);
+            }}
             onSelect={setSelectedPostingId}
             onVisibleOrderChange={handleVisibleOrderChange}
             postings={postings.data}
@@ -117,6 +132,13 @@ export function JobPostingsPage({
           workflowStatus={selectedPosting?.workflowStatus}
         />
       </section>
+      <ManualJobPostingDialog
+        error={postings.createError}
+        isOpen={isAddJobOpen}
+        isSaving={postings.isCreating}
+        onClose={() => setIsAddJobOpen(false)}
+        onCreate={handleCreatePosting}
+      />
     </main>
   );
 }

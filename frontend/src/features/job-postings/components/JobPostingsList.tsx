@@ -8,6 +8,7 @@ type JobPostingsListProps = {
   activeId?: string;
   postings: JobPosting[];
   statuses: WorkflowStatus[];
+  onAdd: () => void;
   onSelect: (id: string) => void;
   onVisibleOrderChange: (ids: string[]) => void;
 };
@@ -16,6 +17,7 @@ export function JobPostingsList({
   activeId,
   postings,
   statuses,
+  onAdd,
   onSelect,
   onVisibleOrderChange,
 }: JobPostingsListProps) {
@@ -87,7 +89,13 @@ export function JobPostingsList({
           <span className="section-kicker">OPPORTUNITIES</span>
           <h2>All jobs</h2>
         </div>
-        <span className="result-count">{visiblePostings.length}</span>
+        <div className="jobs-index__actions">
+          <span className="result-count">{visiblePostings.length}</span>
+          <button className="add-job-button" onClick={onAdd} type="button">
+            <span aria-hidden="true">+</span>
+            Add job
+          </button>
+        </div>
       </div>
 
       <div className="jobs-toolbar">
@@ -131,7 +139,7 @@ export function JobPostingsList({
       {postings.length === 0 ? (
         <div className="index-empty">
           <strong>No job postings yet</strong>
-          <span>Imported opportunities will appear here.</span>
+          <span>Import an opportunity or add one manually.</span>
         </div>
       ) : visiblePostings.length === 0 ? (
         <div className="index-empty">

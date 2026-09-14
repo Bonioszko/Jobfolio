@@ -109,7 +109,8 @@ export function JobPostingDetails({
             <span>{posting.sourceKey}</span>
             <span aria-hidden="true">·</span>
             <time dateTime={posting.sourceReceivedAt}>
-              Received {new Date(posting.sourceReceivedAt).toLocaleDateString()}
+              {posting.sourceKey === "manual" ? "Added" : "Received"}{" "}
+              {new Date(posting.sourceReceivedAt).toLocaleDateString()}
             </time>
           </div>
         </div>
@@ -147,18 +148,20 @@ export function JobPostingDetails({
         </dl>
       )}
 
-      <details className="source-disclosure">
-        <summary>
-          <span>Parsed source email</span>
-          <span aria-hidden="true">+</span>
-        </summary>
-        <iframe
-          className="email-preview"
-          sandbox=""
-          srcDoc={posting.demoEmailHtml ?? ""}
-          title="Parsed source email"
-        />
-      </details>
+      {posting.sourceKey !== "manual" && (
+        <details className="source-disclosure">
+          <summary>
+            <span>Parsed source email</span>
+            <span aria-hidden="true">+</span>
+          </summary>
+          <iframe
+            className="email-preview"
+            sandbox=""
+            srcDoc={posting.demoEmailHtml ?? ""}
+            title="Parsed source email"
+          />
+        </details>
+      )}
 
       <section className="detail-section" aria-labelledby="overview-heading">
         <span className="section-kicker">ROLE OVERVIEW</span>

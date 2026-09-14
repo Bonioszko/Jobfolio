@@ -14,3 +14,13 @@ export type JobPostingPage = {
   items: JobPosting[];
   nextCursor: string | null;
 };
+
+export type CreateManualJobPostingInput = {
+  title: string;
+  company: string;
+  location?: string;
+  employmentType?: string;
+  salary?: string;
+  description: string;
+  url?: string;
+};

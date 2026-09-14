@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IDemoSessionService, DemoSessionService>();
         services.AddScoped<IDemoWorkspaceSeeder, DemoWorkspaceSeeder>();
         services.AddScoped<IJobPostingQueryService, JobPostingQueryService>();
+        services.AddScoped<IManualJobPostingService, ManualJobPostingService>();
         services.AddScoped<IApplicationStatusService, ApplicationStatusService>();
         services.AddScoped<IApplicationStatusStore, ApplicationStatusStore>();
         services.AddScoped<IInterviewNoteService, InterviewNoteService>();

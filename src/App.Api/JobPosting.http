@@ -1,0 +1,17 @@
+@baseUrl = http://localhost:5121
+@sessionCookie = replace-with-jobparser-session-cookie
+
+### Add a job posting manually
+POST {{baseUrl}}/api/source-items
+Content-Type: application/json
+Cookie: jobparser.session={{sessionCookie}}
+
+{
+  "title": "Senior .NET Developer",
+  "company": "Example Company",
+  "location": "Warsaw / Remote",
+  "employmentType": "B2B",
+  "salary": "20 000–26 000 PLN",
+  "description": "Build and maintain APIs in ASP.NET Core.",
+  "url": "https://example.com/jobs/senior-dotnet-developer"
+}

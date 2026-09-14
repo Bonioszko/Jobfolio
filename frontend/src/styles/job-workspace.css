@@ -34,6 +34,36 @@
   letter-spacing: -0.025em;
 }
 
+.jobs-index__actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.add-job-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 11px;
+  color: white;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 750;
+  gap: 6px;
+}
+
+.add-job-button:hover {
+  background: var(--accent-dark);
+}
+
+.add-job-button span {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+}
+
 .section-kicker {
   color: #7a837e;
   font-size: 10px;
@@ -50,6 +80,106 @@
   font-size: 12px;
   font-weight: 700;
   text-align: center;
+}
+
+.manual-job-dialog {
+  width: min(calc(100% - 32px), 820px);
+  max-height: min(90vh, 850px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+}
+
+.manual-job-dialog::backdrop {
+  background: rgb(20 25 22 / 52%);
+  backdrop-filter: blur(2px);
+}
+
+.manual-job-dialog__surface {
+  max-height: min(90vh, 850px);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  box-shadow: 0 28px 80px rgb(20 25 22 / 28%);
+}
+
+.manual-job-dialog__header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 23px 25px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  gap: 24px;
+}
+
+.manual-job-dialog__header h2 {
+  margin: 5px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+
+.manual-job-dialog__header p {
+  margin: 7px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.manual-job-form {
+  display: grid;
+  padding: 23px 25px 25px;
+  gap: 17px;
+}
+
+.manual-job-form__row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.manual-job-form__row--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.manual-job-form input,
+.manual-job-form textarea {
+  width: 100%;
+  padding: 10px 11px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.manual-job-form input {
+  height: 40px;
+}
+
+.manual-job-form textarea {
+  min-height: 230px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.manual-job-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.manual-job-form__actions .primary-action {
+  padding: 0 17px;
 }
 
 .jobs-toolbar {

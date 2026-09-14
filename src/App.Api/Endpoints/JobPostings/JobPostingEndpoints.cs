@@ -1,5 +1,6 @@
 using App.Api.Authentication;
 using App.Application;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace App.Api.Endpoints.JobPostings;
 
@@ -8,6 +9,13 @@ public static class JobPostingEndpoints
     public static RouteGroupBuilder MapJobPostingEndpoints(this RouteGroupBuilder group)
     {
         group.MapGet("/source-items", ListAsync);
+        group.MapPost("/source-items", CreateManualAsync)
+            .WithName("CreateManualJobPosting")
+            .WithTags("Job postings")
+            .WithSummary("Add a job posting manually")
+            .WithDescription("Creates a workspace-owned job posting from user-entered details.")
+            .Produces<JobPostingView>(StatusCodes.Status201Created)
+            .ProducesValidationProblem();
         group.MapGet("/source-items/{id:guid}", GetAsync);
         group.MapPut("/source-items/{id:guid}/status", ChangeStatusAsync);
         return group;
@@ -47,6 +55,31 @@ public static class JobPostingEndpoints
         return Results.Ok(new JobPostingPageResponse(
             page.Items,
             page.NextCursor is null ? null : JobPostingCursorCodec.Encode(page.NextCursor)));
+    }
+
+    private static async Task<Results<Created<JobPostingView>, ValidationProblem>> CreateManualAsync(
+        CreateManualJobPosting request,
+        ICurrentWorkspaceAccessor workspaceAccessor,
+        IManualJobPostingService manualJobPostings,
+        CancellationToken cancellationToken)
+    {
+        var result = await manualJobPostings.CreateAsync(
+            workspaceAccessor.GetRequired().Key,
+            request,
+            cancellationToken);
+
+        return result.Outcome switch
+        {
+            CreateManualJobPostingOutcome.Created => TypedResults.Created(
+                $"/api/source-items/{result.Posting!.Id}",
+                result.Posting),
+            CreateManualJobPostingOutcome.InvalidInput => TypedResults.ValidationProblem(
+                result.ValidationErrors ?? new Dictionary<string, string[]>
+                {
+                    ["jobPosting"] = ["The job posting is invalid."]
+                }),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result.Outcome, null)
+        };
     }
 
     private static async Task<IResult> GetAsync(

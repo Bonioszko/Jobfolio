@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage, isAbortError } from "../../../lib/errors/getErrorMessage";
-import { getAllJobPostings, updateJobPostingStatus } from "../api/jobPostingsApi";
-import type { JobPosting } from "../types/jobPosting";
+import {
+  createManualJobPosting,
+  getAllJobPostings,
+  updateJobPostingStatus,
+} from "../api/jobPostingsApi";
+import type { CreateManualJobPostingInput, JobPosting } from "../types/jobPosting";
 import { updateWorkflowStatus } from "../utils/updateWorkflowStatus";
 
 export function useJobPostings() {
   const [data, setData] = useState<JobPosting[]>([]);
+  const [createError, setCreateError] = useState<string>();
   const [error, setError] = useState<string>();
+  const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
@@ -45,11 +51,31 @@ export function useJobPostings() {
     }
   }, []);
 
+  const createPosting = useCallback(async (input: CreateManualJobPostingInput) => {
+    setCreateError(undefined);
+    setIsCreating(true);
+
+    try {
+      const created = await createManualJobPosting(input);
+      setData((current) => [created, ...current.filter((posting) => posting.id !== created.id)]);
+      return created;
+    } catch (requestError) {
+      setCreateError(getErrorMessage(requestError));
+      return undefined;
+    } finally {
+      setIsCreating(false);
+    }
+  }, []);
+
   return {
     data,
+    createError,
     error,
+    isCreating,
     isLoading,
     updatingIds,
     changeStatus,
+    clearCreateError: () => setCreateError(undefined),
+    createPosting,
   };
 }

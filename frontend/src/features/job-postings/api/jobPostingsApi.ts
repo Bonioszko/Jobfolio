@@ -1,5 +1,9 @@
 import { httpClient } from "../../../lib/api/httpClient";
-import type { JobPosting, JobPostingPage } from "../types/jobPosting";
+import type {
+  CreateManualJobPostingInput,
+  JobPosting,
+  JobPostingPage,
+} from "../types/jobPosting";
 
 type JobPostingFilters = {
   status?: string;
@@ -45,6 +49,10 @@ export async function getAllJobPostings(
 
 export function getJobPosting(id: string, signal?: AbortSignal) {
   return httpClient.get<JobPosting>(`/api/source-items/${id}`, { signal });
+}
+
+export function createManualJobPosting(input: CreateManualJobPostingInput) {
+  return httpClient.post<JobPosting>("/api/source-items", input);
 }
 
 export function updateJobPostingStatus(id: string, status: string) {

@@ -209,6 +209,11 @@
   .managed-process-row .secondary-action {
     grid-column: 2;
   }
+
+  .manual-job-form__row,
+  .manual-job-form__row--three {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 440px) {
@@ -265,6 +270,21 @@
   .manage-interviews-dialog {
     width: calc(100% - 20px);
     max-height: calc(100vh - 20px);
+  }
+
+  .manual-job-dialog {
+    width: calc(100% - 20px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .manual-job-dialog__surface {
+    max-height: calc(100vh - 20px);
+  }
+
+  .manual-job-dialog__header,
+  .manual-job-form {
+    padding-right: 18px;
+    padding-left: 18px;
   }
 
   .manage-interviews-dialog__surface {
