@@ -21,13 +21,13 @@ export function AppHeader({
 
   return (
     <header className="app-header">
-      <div className="brand-lockup">
+      <a className="brand-lockup" href="/" aria-label="Jobfolio home">
         <span className="brand-mark" aria-hidden="true">J</span>
         <div>
           <span className="brand-name">Jobfolio</span>
           <span className="brand-context">Application workspace</span>
         </div>
-      </div>
+      </a>
 
       <nav className="app-navigation" aria-label="Primary navigation">
         <a aria-current={activePage === "jobs" ? "page" : undefined} href="/">

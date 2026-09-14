@@ -109,6 +109,8 @@ summary:focus-visible {
 
 .brand-lockup {
   gap: 12px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .brand-mark {
