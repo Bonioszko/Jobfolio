@@ -94,7 +94,7 @@ export function ApplicationKanbanBoard({
                       <span>{posting.sourceKey}</span>
                       {isUpdating && <span role="status">Moving…</span>}
                     </div>
-                    <a href={`/?job=${encodeURIComponent(posting.id)}`}>
+                    <a href={`/jobs?job=${encodeURIComponent(posting.id)}`}>
                       {posting.displayTitle}
                     </a>
                     <p>{displayValue(posting.parsedData.company)}</p>

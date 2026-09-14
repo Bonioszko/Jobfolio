@@ -45,6 +45,54 @@
     border-bottom: 1px solid var(--line);
   }
 
+  .app-navigation a {
+    flex: 1;
+    justify-content: center;
+    padding: 0 7px;
+  }
+
+  .application-dashboard {
+    padding: 26px 20px;
+  }
+
+  .application-dashboard__intro {
+    display: block;
+  }
+
+  .application-dashboard__browse {
+    margin-top: 18px;
+  }
+
+  .application-dashboard__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .application-dashboard__summary > div {
+    padding: 14px 18px;
+  }
+
+  .application-dashboard__summary > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .application-dashboard__summary > div:nth-child(3),
+  .application-dashboard__summary > div:nth-child(4) {
+    border-top: 1px solid var(--line);
+  }
+
+  .application-dashboard__summary > div:first-child,
+  .application-dashboard__summary > div:nth-child(3) {
+    padding-left: 0;
+  }
+
+  .application-dashboard__loading {
+    grid-template-columns: 1fr;
+  }
+
+  .application-dashboard__loading span:not(:first-child) {
+    display: none;
+  }
+
   .workspace-layout {
     display: block;
     overflow: hidden;
@@ -242,7 +290,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .interview-dashboard-loading span {
+  .interview-dashboard-loading span,
+  .application-dashboard__loading span {
     animation: none;
   }
 }

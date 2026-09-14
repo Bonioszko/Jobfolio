@@ -8,6 +8,7 @@ import { useDomainConfig } from "../features/domain-config/hooks/useDomainConfig
 import { JobPostingsPage } from "../features/job-postings/pages/JobPostingsPage";
 import { InterviewDashboardPage } from "../features/interview-dashboard/pages/InterviewDashboardPage";
 import { ApplicationKanbanPage } from "../features/application-kanban/pages/ApplicationKanbanPage";
+import { ApplicationDashboardPage } from "../features/application-dashboard/pages/ApplicationDashboardPage";
 
 export function App() {
   const domainConfig = useDomainConfig();
@@ -67,8 +68,26 @@ export function App() {
     );
   }
 
+  const isJobWorkspace = window.location.pathname === "/jobs" || (
+    window.location.pathname === "/" &&
+    new URLSearchParams(window.location.search).has("job")
+  );
+
+  if (isJobWorkspace) {
+    return (
+      <JobPostingsPage
+        authenticationError={session.error}
+        domain={domainConfig.data}
+        googleSignInUrl={googleSignInUrl}
+        isLoggingOut={session.isLoggingOut}
+        onLogout={session.logout}
+        session={session.session}
+      />
+    );
+  }
+
   return (
-    <JobPostingsPage
+    <ApplicationDashboardPage
       authenticationError={session.error}
       domain={domainConfig.data}
       googleSignInUrl={googleSignInUrl}

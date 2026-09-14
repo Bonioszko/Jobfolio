@@ -61,7 +61,10 @@ export function InterviewProcessCard({ process }: InterviewProcessCardProps) {
         </dl>
       </div>
 
-      <a className="interview-process-link" href={`/?job=${posting.id}`}>
+      <a
+        className="interview-process-link"
+        href={`/jobs?job=${encodeURIComponent(posting.id)}`}
+      >
         Open job and interview history
         <span aria-hidden="true">→</span>
       </a>
