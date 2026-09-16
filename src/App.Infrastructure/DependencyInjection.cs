@@ -63,6 +63,7 @@ public static class DependencyInjection
         AddJobPostingDetailsFetcher<NoFluffJobsJobPostingDetailsFetcher>(services, detailsTimeout);
         AddJobPostingDetailsFetcher<IndeedJobPostingDetailsFetcher>(services, detailsTimeout);
         AddJobPostingDetailsFetcher<PracujPlJobPostingDetailsFetcher>(services, detailsTimeout);
+        AddJobPostingDetailsFetcher<TheProtocolJobPostingDetailsFetcher>(services, detailsTimeout);
         services.AddTransient<IJobPostingDetailsEnricher, JobPostingDetailsEnricher>();
 
         services.AddSingleton<ICvGenerationQueue, PostgresCvGenerationQueue>();
@@ -72,6 +73,7 @@ public static class DependencyInjection
         services.AddSingleton<ISourceParser, NoFluffJobsParser>();
         services.AddSingleton<ISourceParser, IndeedJobParser>();
         services.AddSingleton<ISourceParser, PracujPlJobParser>();
+        services.AddSingleton<ISourceParser, TheProtocolJobParser>();
         services.AddSingleton<ISourceParserRegistry, SourceParserRegistry>();
         services.AddSingleton<ICodexCliClient, CodexCliClient>();
         services.AddSingleton<IAiCvGenerator, DemoCvGenerator>();

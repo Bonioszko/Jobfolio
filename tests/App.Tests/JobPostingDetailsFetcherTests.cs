@@ -12,7 +12,8 @@ public sealed class JobPostingDetailsFetcherTests
         { "linkedin", "4450756772", "https://www.linkedin.com/jobs/view/4450756772?trk=email", "linkedin-offer.html", "Build reliable .NET services." },
         { "justjoin.it", "example-net-developer", "https://justjoin.it/job-offer/example-net-developer?utm_source=email", "justjoinit-offer.html", "Develop a logistics platform" },
         { "nofluffjobs", "example-net-developer", "https://nofluffjobs.com/pl/job/example-net-developer?utm_source=email", "nofluffjobs-offer.html", "Strong C# and Azure experience." },
-        { "indeed", "abc123", "https://pl.indeed.com/viewjob?jk=abc123&from=job-alert", "indeed-offer.html", "Maintain backend APIs" }
+        { "indeed", "abc123", "https://pl.indeed.com/viewjob?jk=abc123&from=job-alert", "indeed-offer.html", "Maintain backend APIs" },
+        { "theprotocol.it", "11111111-1111-4111-8111-111111111111", "https://theprotocol.it/szczegoly/praca/fullstack-product-engineer,oferta,11111111-1111-4111-8111-111111111111?utm_source=jobalert", "theprotocol-offer.html", "Build reliable .NET services" }
     };
 
     [Theory]
@@ -48,6 +49,7 @@ public sealed class JobPostingDetailsFetcherTests
     [InlineData("justjoin.it", "example-net-developer", "https://justjoin.it.attacker.test/job-offer/example-net-developer")]
     [InlineData("nofluffjobs", "example-net-developer", "https://nofluffjobs.com.attacker.test/job/example-net-developer")]
     [InlineData("indeed", "abc123", "https://indeed.com.attacker.test/viewjob?jk=abc123")]
+    [InlineData("theprotocol.it", "11111111-1111-4111-8111-111111111111", "https://theprotocol.it.attacker.test/szczegoly/praca/developer,oferta,11111111-1111-4111-8111-111111111111")]
     public async Task Schema_provider_fetchers_reject_untrusted_hosts(
         string sourceKey,
         string externalId,
@@ -58,6 +60,21 @@ public sealed class JobPostingDetailsFetcherTests
 
         await Assert.ThrowsAsync<ArgumentException>(() => fetcher.FetchAsync(
             new JobPostingDetailsReference(sourceKey, externalId, new Uri(url)),
+            CancellationToken.None));
+        Assert.Null(handler.RequestUri);
+    }
+
+    [Fact]
+    public async Task TheProtocol_fetcher_rejects_an_identifier_that_does_not_match_the_page_url()
+    {
+        var handler = SuccessHandler("", "text/html");
+        var fetcher = CreateFetcher("theprotocol.it", handler);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => fetcher.FetchAsync(
+            new JobPostingDetailsReference(
+                "theprotocol.it",
+                "99999999-9999-4999-8999-999999999999",
+                new Uri("https://theprotocol.it/szczegoly/praca/developer,oferta,11111111-1111-4111-8111-111111111111")),
             CancellationToken.None));
         Assert.Null(handler.RequestUri);
     }
@@ -112,6 +129,7 @@ public sealed class JobPostingDetailsFetcherTests
             "nofluffjobs" => new NoFluffJobsJobPostingDetailsFetcher(client, options),
             "indeed" => new IndeedJobPostingDetailsFetcher(client, options),
             "pracuj.pl" => new PracujPlJobPostingDetailsFetcher(client, options),
+            "theprotocol.it" => new TheProtocolJobPostingDetailsFetcher(client, options),
             _ => throw new ArgumentOutOfRangeException(nameof(sourceKey))
         };
     }

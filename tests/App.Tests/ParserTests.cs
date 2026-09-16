@@ -121,6 +121,51 @@ public sealed class ParserTests
             });
     }
 
+    [Fact]
+    public async Task TheProtocol_parser_imports_every_complete_job_card_from_real_alert_layout()
+    {
+        var email = await FixtureEmailAsync(
+            "theprotocol-alert.html",
+            "the:protocol <jobalert@mailing.theprotocol.it>");
+        var parser = new TheProtocolJobParser();
+
+        Assert.True(parser.CanParse(email));
+
+        var results = await parser.ParseAsync(email, CancellationToken.None);
+
+        Assert.Equal(3, results.Count);
+        Assert.Equal(1, parser.Version);
+        Assert.Collection(
+            results,
+            first =>
+            {
+                Assert.Equal("theprotocol.it", first.SourceKey);
+                Assert.Equal("11111111-1111-4111-8111-111111111111", first.SourceExternalId);
+                Assert.Equal("Fullstack Product Engineer (AI-Native) (m/f)", first.DisplayTitle);
+                Assert.Equal("Example Recruitment sp. z o.o.", first.ParsedData["company"]);
+                Assert.Equal("Warszawa, Wola", first.ParsedData["location"]);
+                Assert.Equal("maks. 130 zł / godz.", first.ParsedData["salary"]);
+                Assert.Null(first.ParsedData["description"]);
+                Assert.Equal(
+                    "https://theprotocol.it/szczegoly/praca/fullstack-product-engineer-ai-native-warszawa-prosta-68,oferta,11111111-1111-4111-8111-111111111111",
+                    first.ParsedData["url"]);
+            },
+            second =>
+            {
+                Assert.Equal("Software Engineer (C# .NET)", second.DisplayTitle);
+                Assert.Equal("Example Technologies", second.SearchData["company"]);
+                Assert.Equal("Katowice", second.SearchData["location"]);
+                Assert.Equal("max 9 700 zł / mth.", second.ParsedData["salary"]);
+            },
+            third =>
+            {
+                Assert.Equal("Programista / Programistka Full Stack .NET", third.DisplayTitle);
+                Assert.Equal("Example Software", third.ParsedData["company"]);
+                Assert.Equal("Poznań, Jeżyce", third.ParsedData["location"]);
+                Assert.Null(third.ParsedData["salary"]);
+            });
+    }
+
     [Theory]
     [InlineData("alerts@nofluffjobs.com.attacker.test")]
     [InlineData("not-linkedin@example.test")]
@@ -129,6 +174,18 @@ public sealed class ParserTests
     {
         Assert.False(new NoFluffJobsParser().CanParse(
             new EmailMessage("1", sender, "subject", "body", DateTimeOffset.UtcNow)));
+    }
+
+    [Fact]
+    public void TheProtocol_parser_rejects_sender_domain_spoofing()
+    {
+        Assert.False(new TheProtocolJobParser().CanParse(
+            new EmailMessage(
+                "1",
+                "jobalert@mailing.theprotocol.it.attacker.test",
+                "subject",
+                "body",
+                DateTimeOffset.UtcNow)));
     }
 
     [Fact]
