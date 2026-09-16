@@ -10,6 +10,7 @@ public sealed record JobPostingView(
     string ParserKey,
     int ParserVersion,
     DateTimeOffset SourceReceivedAt,
+    DateTimeOffset? AppliedAt,
     string? DemoEmailHtml);
 
 public sealed record JobPostingCursor(DateTimeOffset SourceReceivedAt, Guid Id);

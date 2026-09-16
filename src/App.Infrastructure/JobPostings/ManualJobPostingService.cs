@@ -68,6 +68,7 @@ public sealed class ManualJobPostingService(
                 posting.ParserKey,
                 posting.ParserVersion,
                 posting.SourceReceivedAt,
+                posting.AppliedAt,
                 null));
     }
 

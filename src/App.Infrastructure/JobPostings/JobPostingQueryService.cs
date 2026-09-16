@@ -87,5 +87,6 @@ public sealed class JobPostingQueryService(AppDbContext db) : IJobPostingQuerySe
             item.ParserKey,
             item.ParserVersion,
             item.SourceReceivedAt,
+            item.AppliedAt,
             includeEmail ? item.DemoEmailHtml : null);
 }

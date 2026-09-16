@@ -43,11 +43,13 @@ export function AppliedJobCard({ posting, statusLabel }: AppliedJobCardProps) {
           <dd>{salary}</dd>
         </div>
         <div>
-          <dt>Added</dt>
+          <dt>Applied</dt>
           <dd>
-            <time dateTime={posting.sourceReceivedAt}>
-              {formatApplicationDate(posting.sourceReceivedAt)}
-            </time>
+            {posting.appliedAt ? (
+              <time dateTime={posting.appliedAt}>
+                {formatApplicationDate(posting.appliedAt)}
+              </time>
+            ) : "Not recorded"}
           </dd>
         </div>
       </dl>

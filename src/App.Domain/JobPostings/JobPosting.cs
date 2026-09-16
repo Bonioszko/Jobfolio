@@ -11,6 +11,7 @@ public sealed class JobPosting : WorkspaceOwnedEntity
     public required string ParserKey { get; set; }
     public int ParserVersion { get; set; }
     public DateTimeOffset SourceReceivedAt { get; set; }
+    public DateTimeOffset? AppliedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     public string? DemoEmailHtml { get; set; }
 }

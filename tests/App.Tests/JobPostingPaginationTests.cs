@@ -58,6 +58,31 @@ public sealed class JobPostingPaginationTests
         Assert.Equal("Third", item.DisplayTitle);
     }
 
+    [Fact]
+    public async Task GetAsync_returns_the_persisted_application_date()
+    {
+        await using var db = CreateDatabase();
+        var appliedAt = DateTimeOffset.Parse("2026-09-15T12:30:00Z");
+        var posting = CreatePosting(
+            "Applied role",
+            DateTimeOffset.Parse("2026-09-10T08:00:00Z"),
+            "00000000-0000-0000-0000-000000000005");
+        posting.ApplicationStatus = "APPLIED";
+        posting.AppliedAt = appliedAt;
+        db.Add(posting);
+        await db.SaveChangesAsync();
+        var service = new JobPostingQueryService(db);
+
+        var result = await service.GetAsync(
+            posting.WorkspaceKey,
+            posting.Id,
+            CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal("APPLIED", result.WorkflowStatus);
+        Assert.Equal(appliedAt, result.AppliedAt);
+    }
+
     private static AppDbContext CreateDatabase()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

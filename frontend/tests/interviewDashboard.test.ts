@@ -67,6 +67,7 @@ function posting(
     parserKey: "linkedin",
     parserVersion: 1,
     sourceReceivedAt,
+    appliedAt: workflowStatus === "NEW" ? null : "2026-09-10T08:00:00Z",
   };
 }
 

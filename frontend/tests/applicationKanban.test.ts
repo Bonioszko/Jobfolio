@@ -83,5 +83,6 @@ function posting(id: string, workflowStatus: string): JobPosting {
     parserKey: "linkedin",
     parserVersion: 2,
     sourceReceivedAt: "2026-09-13T08:00:00Z",
+    appliedAt: workflowStatus === "APPLIED" ? "2026-09-14T08:00:00Z" : null,
   };
 }

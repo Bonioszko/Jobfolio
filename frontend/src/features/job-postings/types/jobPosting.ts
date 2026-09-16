@@ -7,6 +7,7 @@ export type JobPosting = {
   parserKey: string;
   parserVersion: number;
   sourceReceivedAt: string;
+  appliedAt: string | null;
   demoEmailHtml?: string;
 };
 

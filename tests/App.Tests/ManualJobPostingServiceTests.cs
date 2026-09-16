@@ -35,6 +35,7 @@ public sealed class ManualJobPostingServiceTests
         Assert.Equal("manual", view.ParserKey);
         Assert.Equal(1, view.ParserVersion);
         Assert.Equal(now, view.SourceReceivedAt);
+        Assert.Null(view.AppliedAt);
 
         var posting = await db.JobPostings.SingleAsync();
         Assert.Equal("demo:owner", posting.WorkspaceKey);
@@ -45,6 +46,7 @@ public sealed class ManualJobPostingServiceTests
         Assert.Equal("manual", posting.ParserKey);
         Assert.Equal(1, posting.ParserVersion);
         Assert.Equal(now, posting.SourceReceivedAt);
+        Assert.Null(posting.AppliedAt);
         Assert.Equal(now, posting.CreatedAt);
         Assert.Equal(now, posting.UpdatedAt);
 

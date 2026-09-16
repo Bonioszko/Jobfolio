@@ -22,7 +22,7 @@ test("shows every submitted job while excluding jobs not yet applied to", () => 
   );
 });
 
-test("orders submitted jobs by newest received date", () => {
+test("orders submitted jobs by newest application date", () => {
   const applications = getAppliedJobPostings([
     posting("older", "APPLIED", "2026-08-14T08:00:00Z"),
     posting("newest", "INTERVIEWING", "2026-09-14T08:00:00Z"),
@@ -32,6 +32,18 @@ test("orders submitted jobs by newest received date", () => {
   assert.deepEqual(
     applications.map((application) => application.id),
     ["newest", "middle", "older"],
+  );
+});
+
+test("keeps legacy submitted jobs without an application date visible", () => {
+  const applications = getAppliedJobPostings([
+    posting("recorded", "APPLIED", "2026-09-01T08:00:00Z"),
+    posting("legacy", "INTERVIEWING", null, "2026-09-10T08:00:00Z"),
+  ]);
+
+  assert.deepEqual(
+    applications.map((application) => application.id),
+    ["legacy", "recorded"],
   );
 });
 
@@ -54,7 +66,8 @@ test("summarizes each application stage", () => {
 function posting(
   id: string,
   workflowStatus: string,
-  sourceReceivedAt = "2026-09-14T08:00:00Z",
+  appliedAt: string | null = "2026-09-14T08:00:00Z",
+  sourceReceivedAt = "2026-08-01T08:00:00Z",
 ): JobPosting {
   return {
     id,
@@ -68,5 +81,6 @@ function posting(
     parserKey: "linkedin",
     parserVersion: 1,
     sourceReceivedAt,
+    appliedAt,
   };
 }

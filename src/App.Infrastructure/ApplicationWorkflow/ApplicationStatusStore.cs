@@ -19,18 +19,36 @@ public sealed class ApplicationStatusStore(AppDbContext db) : IApplicationStatus
             cancellationToken);
 
         if (posting is null) return false;
-        if (string.Equals(posting.ApplicationStatus, status, StringComparison.Ordinal)) return true;
 
-        var previousStatus = posting.ApplicationStatus;
-        posting.ApplicationStatus = status;
-        posting.UpdatedAt = changedAt;
-        db.ApplicationStatusHistory.Add(new ApplicationStatusHistory
+        var statusChanged = !string.Equals(
+            posting.ApplicationStatus,
+            status,
+            StringComparison.Ordinal);
+        var recordsApplication = string.Equals(status, "APPLIED", StringComparison.Ordinal) &&
+                                 posting.AppliedAt is null;
+
+        if (!statusChanged && !recordsApplication) return true;
+
+        if (recordsApplication)
         {
-            WorkspaceKey = workspaceKey,
-            JobPostingId = jobPostingId,
-            PreviousStatus = previousStatus,
-            NewStatus = status
-        });
+            posting.AppliedAt = changedAt;
+        }
+
+        posting.UpdatedAt = changedAt;
+        if (statusChanged)
+        {
+            var previousStatus = posting.ApplicationStatus;
+            posting.ApplicationStatus = status;
+            db.ApplicationStatusHistory.Add(new ApplicationStatusHistory
+            {
+                WorkspaceKey = workspaceKey,
+                JobPostingId = jobPostingId,
+                PreviousStatus = previousStatus,
+                NewStatus = status,
+                CreatedAt = changedAt
+            });
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return true;

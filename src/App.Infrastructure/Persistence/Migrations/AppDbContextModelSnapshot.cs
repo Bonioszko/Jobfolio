@@ -470,6 +470,9 @@ namespace App.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("WorkflowStatus");
 
+                    b.Property<DateTimeOffset?>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 

@@ -81,6 +81,7 @@ Prefer clear fields for stable concepts such as:
 - provider,
 - provider external ID,
 - received time,
+- first application time,
 - parser key/version.
 
 JSONB is acceptable for optional provider-specific normalized metadata that is not important enough for dedicated schema.
@@ -96,6 +97,10 @@ Current application status lives with the job posting/application workflow recor
 Every status change also creates a status-history record.
 
 Status update + history insert must be atomic.
+
+`AppliedAt` records the first transition into `APPLIED`. Later workflow changes
+preserve it so application dashboards can sort and display the actual submission
+date rather than the email import date.
 
 ## Interview notes
 

@@ -18,10 +18,13 @@ export function getAppliedJobPostings(postings: JobPosting[]) {
     .filter((posting) =>
       APPLIED_WORKFLOW_STATUSES.has(posting.workflowStatus.toUpperCase()),
     )
-    .sort((left, right) =>
-      right.sourceReceivedAt.localeCompare(left.sourceReceivedAt) ||
-      left.displayTitle.localeCompare(right.displayTitle),
-    );
+    .sort((left, right) => {
+      const leftDate = left.appliedAt ?? left.sourceReceivedAt;
+      const rightDate = right.appliedAt ?? right.sourceReceivedAt;
+
+      return rightDate.localeCompare(leftDate) ||
+        left.displayTitle.localeCompare(right.displayTitle);
+    });
 }
 
 export function summarizeApplications(postings: JobPosting[]): ApplicationSummary {
